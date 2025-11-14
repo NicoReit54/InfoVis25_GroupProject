@@ -1,0 +1,1 @@
+We uploaded the initial crime data to google drive, **you do not need to do anything** but it is a 1.88 GB download (a little headsup at this point). 
