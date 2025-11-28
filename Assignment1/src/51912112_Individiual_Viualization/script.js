@@ -10,8 +10,19 @@ const color = d3.scaleOrdinal([
   "#44AAAA", "#77CCCC", "#117744", "#44AA77", "#88CCAA", "#777711", "#AAAA44", 
   "#DDDD77", "#774411", "#AA7744", "#DDAA77", "#771122", "#AA4455", "#DD7788"])
 
-// TODO: Adapt for our data 
-d3.csv("vis_data.csv").then(data => {
+// We have to adapt the data types as all are strings!
+d3.csv("vis_data.csv", d => ({
+  // + in front of the loaded row (here d) means "convert to number"
+  latitude: +d.latitude,
+  longitude: +d.longitude,
+  property_type: d.property_type,
+  room_type: d.room_type,
+  review_scores_rating: +d.review_scores_rating,
+  accommodates: +d.accommodates,
+  bedrooms: +d.bedrooms,
+  beds: +d.beds,
+  price: +d.price
+})).then(data => {
   console.log(data[0]);
   console.log(data);
   // okay nice, super simple layout! (
