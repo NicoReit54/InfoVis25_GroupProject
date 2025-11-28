@@ -21,7 +21,8 @@ d3.csv("vis_data.csv", d => ({
   accommodates: +d.accommodates,
   bedrooms: +d.bedrooms,
   beds: +d.beds,
-  price: +d.price
+  price: +d.price,
+  rating_bucket: d.rating_bucket
 })).then(data => {
   console.log(data[0]);
   console.log(data);
@@ -105,8 +106,10 @@ const plotTreeMap = function(data) {
     data,
     v => ({
       avg_price: d3.mean(v, d => d.price),
-      avg_rating: d3.mean(v, d => d.review_scores_rating)
+      avg_rating: d3.mean(v, d => d.review_scores_rating),
+      count: v.length
     }),
+    d => d.rating_bucket,
     d => d.room_type, // first group
     d => d.property_type // second level
   );
@@ -126,11 +129,11 @@ const plotTreeMap = function(data) {
   const root = d3.hierarchy(group, ([key, value]) =>
     value instanceof Map ? Array.from(value) : null
   )
-  .sum(([key, value]) => value.avg_price);
-    //.sort((a, b) => d3.descending(a.value, b.value));
+  .sum(([key, value]) => value.count)
+  .sort((a, b) => d3.descending(a.value, b.value));
 
   console.log(root) // This format I do not entirely get but I also did not during the tutorial
-  
+
   // 3. Compute the treemap layout
   // Ref: https://d3js.org/d3-hierarchy/treemap
   d3.treemap()
@@ -139,6 +142,8 @@ const plotTreeMap = function(data) {
    .padding(2)
    (root); // calling it here with root >> that when root existds the d3 treemap is executed
   
+  console.log(root.leaves()[0]);
+
   // 4. Add leave nodes to the SVG element
   const node = svg.selectAll("a") // TODO look up <a> element in HTML, has something to do with hyperlinks
    .data(root.leaves())
@@ -148,7 +153,7 @@ const plotTreeMap = function(data) {
   console.log(node);
   
   node.append("rect")
-   .attr("fill", d => color(d.parent.data[0]))
+   .attr("fill", d => color(d.parent.parent.data[0]))
    .attr("fill-opacity", 0.5)
    .attr("width", d => d.x1 - d.x0)
    .attr("height", d => d.y1 - d.y0);
@@ -157,7 +162,7 @@ const plotTreeMap = function(data) {
 
   // 5. Add the tooltip to each node
   node.append("title")
-  .text(d => `${d.data[0]} (${d.parent.data[0]})
+  .text(d => `${d.data[0]} (${d.parent.parent.data[0]})
               \nAvg Price: ${d3.format(".2f")(d.data[1].avg_price)}
               \nAvg Rating: ${d3.format(".2f")(d.data[1].avg_rating)}`);
 
@@ -173,5 +178,6 @@ const plotTreeMap = function(data) {
         // inspect the text to see exactly, but its just above the actual text value so it makes sense!
        .attr("clip-path", (d, i) => `url(#clip-${i})`) 
        .html(d =>`<tspan x=5 y=15 font-weight="bold">${d.data[0]}</tspan>
-                   <tspan x=5 y=30 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>`)
+                  <tspan x=5 y=30 fill-opacity=0.7>${d.parent.parent.data[0]}</tspan>
+                  <tspan x=5 y=45 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>`)
 }

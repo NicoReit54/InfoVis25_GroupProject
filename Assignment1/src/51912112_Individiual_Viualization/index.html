@@ -8,12 +8,27 @@
 </head>
 <body>
 	<h1 class="responsive-svg-container">TreeMap of whatever<h1></h1>
-	<label for="choice" style="margin-left:30px">Sort by</label>
-	<select name="choice" id="choice">
-		<option value="alphabet">Alphabetical</option>
-		<option value="pctAsce">Percentage of pay gap, ascending</option>
-		<option value="pctDesc">Percentage of pay gap, descending</option>
+	<label for="level1" style="margin-left:30px">Level 1</label>
+	<select id="level1">
+		<option value="room_type">Room Type</option>
+		<option value="property_type">Property Type</option>
+		<option value="rating_bucket">Rating Bucket</option>
 	</select>
+
+	<label for="level2" style="margin-left:30px">Level 2</label>
+	<select id="level2">
+		<option value="room_type">Room Type</option>
+		<option value="property_type">Property Type</option>
+		<option value="rating_bucket">Rating Bucket</option>
+	</select>
+
+	<label for="level3" style="margin-left:30px">Level 3</label>
+	<select id="level3">
+		<option value="room_type">Room Type</option>
+		<option value="property_type">Property Type</option>
+		<option value="rating_bucket">Rating Bucket</option>
+	</select>
+	
 	<div id="treemap" class="responsive-svg-container"></div>
 
 	<!-- Load your scripts here -->
