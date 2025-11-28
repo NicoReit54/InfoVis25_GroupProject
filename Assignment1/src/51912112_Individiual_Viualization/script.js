@@ -30,14 +30,14 @@ d3.csv("vis_data.csv", d => ({
   // {latitude: '41.89634', longitude: '-87.65608', property_type: 'Entire rental unit', room_type: 'Entire home/apt', review_scores_rating: '4.9', …})
 
   // I have already implemented the color legend.
-  //createColorLegend(nodes);
+  //createColorLegend(data);
 
   // and tree map.
-  //plotTreeMap(nodes);
+  plotTreeMap(data);
 });
 
 
-const createColorLegend = function(nodes) {
+const createColorLegend = function(data) {
   // d3.nest() creates a "nest" operator used to group an array of data
   // into keyed buckets. It's a builder pattern: you configure how to
   // group (key), optionally how to reduce each group (rollup), and then
@@ -66,7 +66,7 @@ const createColorLegend = function(nodes) {
   //    { key: "section-id-2", value: "Section Name 2" },
   //    ...]
   // If rollup were omitted, `value` would be the array of grouped items.
-  .entries(nodes);
+  .entries(data);
 
   sections = sections.sort((a, b) => d3.ascending(+a.key, +b.key))
 
@@ -85,7 +85,7 @@ const createColorLegend = function(nodes) {
 }
 
 // TODO: Adapt for our purpose
-const plotTreeMap = function(nodes) {
+const plotTreeMap = function(data) {
   const width = 1500, height = 800;
 
   const svg = d3.select("#treemap")
@@ -100,19 +100,26 @@ const plotTreeMap = function(nodes) {
   // 1. Transform the node data to hierarcical format 
   // >> Really important for the d3TreeMap to recognize how to put the layout!!
   // Ref: https://d3js.org/d3-array/group and https://observablehq.com/@d3/d3-group
-  const group = d3.group(
-    nodes, // data
-    d => d['Section ID'], // first group
-    d => d["HS2 ID"] // second group 
-   );
+
+  const group = d3.rollup(
+    data,
+    v => ({
+      avg_price: d3.mean(v, d => d.price),
+      avg_rating: d3.mean(v, d => d.review_scores_rating)
+    }),
+    d => d.room_type, // first group
+    d => d.property_type // second level
+  );
+
+  console.log(group)
 
   // 2. Create the hierarchical layout with d3.hierarchy
   // Ref: https://d3js.org/d3-hierarchy/hierarchy
   const root = d3.hierarchy(group)
-    .sum(d => d["Trade Value"]) // will be the value visible in the console.log of root
-    .sort((a, b) => d3.descending(a.value, b.value));
+    .sum(([key, value]) => value.avg_price) // will be the value visible in the console.log of root
+    //.sort((a, b) => d3.descending(a.value, b.value));
 
-  console.log(root)
+  console.log(root) // This format I do not entirely get but I also did not during the tutorial
   
   // 3. Compute the treemap layout
   // Ref: https://d3js.org/d3-hierarchy/treemap
