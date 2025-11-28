@@ -1,0 +1,39 @@
+body {
+  font-family: 'Arial', sans-serif; 
+}
+
+h1 {
+  text-align: center;
+}
+
+.responsive-svg-container {
+  margin-right: auto;
+  margin-left: auto;
+  width: 100%;
+  max-width: 1200px;
+  /*display: flex;*/
+  flex-wrap: wrap;
+}
+
+.swatches-item {
+  float: left;
+  width: 16%;
+  break-inside: avoid;
+  display: flex;
+  align-items: center;
+  padding-bottom: 1px;
+  position: relative;
+}
+
+.swatches-swatch {
+  width: 15px;
+  height: 15px;
+  margin: 0 0.5em 0 0;
+}
+
+/*.swatche-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 15px - 0.5em);
+}*/
