@@ -107,6 +107,9 @@ const plotTreeMap = function(data) {
     v => ({
       avg_price: d3.mean(v, d => d.price),
       avg_rating: d3.mean(v, d => d.review_scores_rating),
+      avg_accommodates: d3.mean(v, d => d.accommodates),
+      avg_bedrooms: d3.mean(v, d => d.bedrooms),
+      avg_beds: d3.mean(v, d => d.beds),		
       count: v.length
     }),
     d => d.rating_bucket,
@@ -164,7 +167,9 @@ const plotTreeMap = function(data) {
   node.append("title")
   .text(d => `${d.data[0]} (${d.parent.parent.data[0]})
               \nAvg Price: ${d3.format(".2f")(d.data[1].avg_price)}
-              \nAvg Rating: ${d3.format(".2f")(d.data[1].avg_rating)}`);
+              \nAvg Rating: ${d3.format(".2f")(d.data[1].avg_rating)}
+              \nAvg Bedrooms: ${d3.format(".2")(d.data[1].avg_bedrooms)}
+              \nAvg Beds: ${d3.format(".2")(d.data[1].avg_beds)}`);
 
   // 6. Add text to each node
   node.append("clipPath")
@@ -180,4 +185,44 @@ const plotTreeMap = function(data) {
        .html(d =>`<tspan x=5 y=15 font-weight="bold">${d.data[0]}</tspan>
                   <tspan x=5 y=30 fill-opacity=0.7>${d.parent.parent.data[0]}</tspan>
                   <tspan x=5 y=45 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>`)
+                 // <tspan x=5 y=60 fill-opacity=0.7>AvgBedrooms ${d3.format(".2")(d.data[1].avg_bedrooms)}</tspan>
+                 // <tspan x=5 y=75 fill-opacity=0.7>AvgBeds ${d3.format(".2")(d.data[1].avg_beds)}</tspan>`)
+}
+
+
+// TODO: Make it properly dynamic
+function buildHierarchy(level1, level2, level3) {
+  const group = d3.rollup(
+    data,
+    v => ({
+      avg_price: d3.mean(v, d => d.price),
+      avg_rating: d3.mean(v, d => d.review_scores_rating),
+      count: v.length
+    }),
+    d => d[level1],   // user choice for level 1
+    d => d[level2],   // user choice for level 2
+    d => d[level3]    // user choice for level 3
+  );
+
+  return d3.hierarchy(group, ([key, value]) =>
+    value instanceof Map ? Array.from(value) : null
+  )
+  .sum(([key, value]) => value.count); 
+}
+
+// Initial render
+let root = buildHierarchy("property_type", "rating_bucket", "room_type");
+drawTreemap(root);
+
+// Listen for dropdown changes
+["level1","level2","level3"].forEach(id => {
+  document.getElementById(id).addEventListener("change", updateTreemap);
+});
+
+function updateTreemap() {
+  const level1 = document.getElementById("level1").value;
+  const level2 = document.getElementById("level2").value;
+  const level3 = document.getElementById("level3").value;
+  const root = buildHierarchy(level1, level2, level3);
+  drawTreemap(root);
 }
