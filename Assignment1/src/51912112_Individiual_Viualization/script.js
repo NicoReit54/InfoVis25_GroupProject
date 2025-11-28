@@ -11,15 +11,20 @@ const color = d3.scaleOrdinal([
   "#DDDD77", "#774411", "#AA7744", "#DDAA77", "#771122", "#AA4455", "#DD7788"])
 
 // TODO: Adapt for our data 
-d3.json("./data.json").then(graph => {
-  const {nodes, links} = graph;
+d3.csv("vis_data.csv").then(data => {
+  console.log(data[0]);
+  console.log(data);
+  // okay nice, super simple layout! (
+  // basically each row like 
+  // {latitude: '41.89634', longitude: '-87.65608', property_type: 'Entire rental unit', room_type: 'Entire home/apt', review_scores_rating: '4.9', …})
 
   // I have already implemented the color legend.
-  createColorLegend(nodes);
+  //createColorLegend(nodes);
 
   // and tree map.
-  plotTreeMap(nodes);
+  //plotTreeMap(nodes);
 });
+
 
 const createColorLegend = function(nodes) {
   // d3.nest() creates a "nest" operator used to group an array of data
