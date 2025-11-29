@@ -10,7 +10,7 @@ h1 {
   margin-right: auto;
   margin-left: auto;
   width: 100%;
-  max-width: 1200px;
+  max-width: 1500px;
   /*display: flex;*/
   flex-wrap: wrap;
 }
@@ -29,6 +29,27 @@ h1 {
   width: 15px;
   height: 15px;
   margin: 0 0.5em 0 0;
+}
+
+.layout {
+  display: flex;          
+  align-items: flex-start; 
+}
+
+.controls {
+  display: flex;
+  flex-direction: column; /* stack labels*/
+  margin-right: 20px;     
+  margin-left: 20px; 
+}
+
+.controls label {
+  margin-top: 10px;
+  margin-bottom: 5px;
+}
+
+.controls select {
+  margin-bottom: 15px;
 }
 
 /*.swatche-label {

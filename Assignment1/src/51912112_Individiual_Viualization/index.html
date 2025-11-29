@@ -8,27 +8,29 @@
 </head>
 <body>
 	<h1 class="responsive-svg-container">Treemap based on number of Airbnbs in Chicago <h1></h1>
-	<label for="level1" style="margin-left:30px">Level 1</label>
-	
-	<select id="level1">
-		<option value="rating_bucket">Rating Bucket</option>
-		<option value="room_type">Room Type</option>
-		<option value="property_type">Property Type</option>
-	</select>
+	<div class="layout">
+    	<!-- Controls column -->
+    	<div class="controls">
+			<label for="level1">Level 1</label>
+			<select id="level1">
+				<option value="rating_bucket">Rating Bucket</option>
+				<option value="room_type">Room Type</option>
+				<option value="property_type">Property Type</option>
+      		</select>
 
-	<label for="level2" style="margin-left:30px">Level 2</label>
-	<select id="level2">
-		<option value="room_type">Room Type</option>
-		<option value="property_type">Property Type</option>
-		<option value="rating_bucket">Rating Bucket</option>
-	</select>
-
-	<label for="level3" style="margin-left:30px">Level 3</label>
-	<select id="level3">
-		<option value="property_type">Property Type</option>
-		<option value="room_type">Room Type</option>
-		<option value="rating_bucket">Rating Bucket</option>
-	</select>
+			<label for="level2">Level 2</label>
+			<select id="level2">
+				<option value="room_type">Room Type</option>
+				<option value="property_type">Property Type</option>
+				<option value="rating_bucket">Rating Bucket</option>
+			</select>
+			<label for="level3">Level 3</label>
+			<select id="level3">
+				<option value="property_type">Property Type</option>
+				<option value="room_type">Room Type</option>
+				<option value="rating_bucket">Rating Bucket</option>
+			</select>
+    </div>
 
 	<div id="treemap" class="responsive-svg-container"></div>
 
