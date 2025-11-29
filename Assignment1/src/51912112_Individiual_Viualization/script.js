@@ -163,8 +163,9 @@ const plotTreeMap = function(root) {
         // inspect the text to see exactly, but its just above the actual text value so it makes sense!
        .attr("clip-path", (d, i) => `url(#clip-${i})`) 
        .html(d =>`<tspan x=5 y=15 font-weight="bold">${d.data[0]}</tspan>
-                  <tspan x=5 y=30 fill-opacity=0.7>${d.parent.parent.data[0]}</tspan>
-                  <tspan x=5 y=45 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>`)
+                  <tspan x=5 y=30 fill-opacity=0.7>${d.parent.data[0]}</tspan>
+                  <tspan x=5 y=45 fill-opacity=0.7>${d.parent.parent.data[0]}</tspan>
+                  <tspan x=5 y=60 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>`)
                  // <tspan x=5 y=60 fill-opacity=0.7>AvgBedrooms ${d3.format(".2")(d.data[1].avg_bedrooms)}</tspan>
                  // <tspan x=5 y=75 fill-opacity=0.7>AvgBeds ${d3.format(".2")(d.data[1].avg_beds)}</tspan>`)
 }
