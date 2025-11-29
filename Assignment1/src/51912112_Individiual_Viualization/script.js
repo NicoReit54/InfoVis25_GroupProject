@@ -115,11 +115,13 @@ const plotTreeMap = function(root) {
 
   // 4. Add leave nodes to the SVG element
   // This is basically the JOIN step from the Tutorial as we add the data to the svg (be it that there was none before)
-  const node = svg.selectAll("a") // TODO: Look up <a> element in HTML, has something to do with hyperlinks acc. to Tutorial
+  
+  // JOIN
+  const node = svg.selectAll("g") // TODO: Look up <a> element in HTML, has something to do with hyperlinks acc. to Tutorial
    .data(root.leaves(), d => d.data[0]);
   
-   // ENTER MODE
-  const nodeEnter = node.enter().append("a")
+  // ENTER MODE
+  const nodeEnter = node.enter().append("g")
     .attr("transform", d => `translate(${d.x0}, ${d.y0})`);
   
   console.log(nodeEnter);
@@ -140,34 +142,23 @@ const plotTreeMap = function(root) {
               \nAvg Bedrooms: ${d3.format(".2")(d.data[1].avg_bedrooms)}
               \nAvg Beds: ${d3.format(".2")(d.data[1].avg_beds)}`);
 
-  nodeEnter.append("clipPath")
-    .attr("id", (d, i) => `clip-${i}`)
-      .append("rect")
-    .attr("width", d => d.x1 - d.x0)
-    .attr("height", d => d.y1 - d.y0);
-
   nodeEnter.append("text")
-      // adding a clip-path cuts everything that is below in the html structure so the text does not go over the square!!
-      // inspect the text to see exactly, but its just above the actual text value so it makes sense!
-      .attr("clip-path", (d, i) => `url(#clip-${i})`) 
-      .html(d =>`<tspan x=5 y=15 font-weight="bold">${d.data[0]}</tspan>
-                <tspan x=5 y=30 fill-opacity=0.7>${d.parent.data[0]}</tspan>
-                <tspan x=5 y=45 fill-opacity=0.7>${d.parent.parent.data[0]}</tspan>
-                <tspan x=5 y=60 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>`);
+    .attr("x", 5)
+    .attr("y", 15)
+    .attr("font-weight", "bold")
+    .text(d => d.data[0]);
 
   // set transition variable
   const t = d3.transition()
     .duration(1000) // 1 sec
     .ease(d3.easeSin); 
 
-  // UPDATE MODE
-  // update now with transition()
+  // UPDATE MODE (update with transition())
   node.transition(t)
     .attr("transform", d => `translate(${d.x0}, ${d.y0})`);
   
   node.select("rect").transition(t)
     .attr("fill", d => color(d.parent.parent.data[0]))
-    .attr("fill-opacity", 0.5)
     .attr("width", d => d.x1 - d.x0)
     .attr("height", d => d.y1 - d.y0);
   
@@ -180,20 +171,13 @@ const plotTreeMap = function(root) {
   
   node.select("clipPath").transition(t)
     .attr("id", (d, i) => `clip-${i}`)
-      .append("rect")
     .attr("width", d => d.x1 - d.x0)
     .attr("height", d => d.y1 - d.y0);
   
-  node.select("text").transition(t)
-    // adding a clip-path cuts everything that is below in the html structure so the text does not go over the square!!
-    // inspect the text to see exactly, but its just above the actual text value so it makes sense!
-    .attr("clip-path", (d, i) => `url(#clip-${i})`) 
-    .html(d =>`<tspan x=5 y=15 font-weight="bold">${d.data[0]}</tspan>
-              <tspan x=5 y=30 fill-opacity=0.7>${d.parent.data[0]}</tspan>
-              <tspan x=5 y=45 fill-opacity=0.7>${d.parent.parent.data[0]}</tspan>
-              <tspan x=5 y=60 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>`);
   // EXIT
-  node.exit().remove();
+  node.exit().transition(t)
+    .style("opacity", 0)
+    .remove();
 
 /*
   // 5. Add the tooltip to each node 
