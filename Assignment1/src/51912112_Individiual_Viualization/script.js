@@ -99,7 +99,6 @@ function buildHierarchy(data, level1, level2, level3) {
   .sort((a, b) => d3.descending(a.value, b.value));
 }
 
-// TODO: Adapt for our purpose
 const plotTreeMap = function(root) {
   console.log(root) // This format I do not entirely get but I also did not during the tutorial
 
@@ -138,7 +137,7 @@ const plotTreeMap = function(root) {
 
   console.log(nodeEnter);
 
-  // enter the text parts 
+  // enter/append the tooltip 
   nodeEnter.append("title")
     .text(d => `${d.data[0]} (${d.parent.data[0]})
               \nAvg Price: ${d3.format(".2f")(d.data[1].avg_price)}
@@ -146,11 +145,19 @@ const plotTreeMap = function(root) {
               \nAvg Bedrooms: ${d3.format(".2")(d.data[1].avg_bedrooms)}
               \nAvg Beds: ${d3.format(".2")(d.data[1].avg_beds)}`);
 
+  nodeEnter.append("clipPath")
+      .attr("id", (d, i) => `clip-${i}`)
+    .append("rect")
+      .attr("width", d => d.x1 - d.x0)
+      .attr("height", d => d.y1 - d.y0);
+  
   nodeEnter.append("text")
-    .attr("x", 5)
-    .attr("y", 15)
-    .attr("font-weight", "bold")
-    .text(d => d.data[0]);
+    .attr("clip-path", (d, i) => `url(#clip-${i})`) 
+    // if the box is too small (20x20 pixels) then do not display anything!
+    .style("display", d => (d.x1 - d.x0 < 20 || d.y1 - d.y0 < 20) ? "none" : "block")
+    .html(d =>`<tspan x=5 y=15 font-weight="bold">${d.data[0]}</tspan>
+                <tspan x=5 y=30 fill-opacity=0.7>${d.parent.data[0]}</tspan>
+                <tspan x=5 y=45 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>`);
 
   // ========================================
   // UPDATE MODE (update with transition())
@@ -158,7 +165,7 @@ const plotTreeMap = function(root) {
 
   // set transition variable
   const t = d3.transition()
-    .duration(1000) // 1 sec
+    .duration(500) // 0.5 sec
     .ease(d3.easeSin); 
   
   node.transition(t)
@@ -169,6 +176,7 @@ const plotTreeMap = function(root) {
     .attr("width", d => d.x1 - d.x0)
     .attr("height", d => d.y1 - d.y0);
   
+  // tooltips
   node.select("title").transition(t)
     .text(d => `${d.data[0]} (${d.parent.data[0]})
               \nAvg Price: ${d3.format(".2f")(d.data[1].avg_price)}
@@ -176,12 +184,19 @@ const plotTreeMap = function(root) {
               \nAvg Bedrooms: ${d3.format(".2")(d.data[1].avg_bedrooms)}
               \nAvg Beds: ${d3.format(".2")(d.data[1].avg_beds)}`);
   
-  node.select("clipPath").transition(t)
-    .attr("id", (d, i) => `clip-${i}`)
+  // for recalculating when to block text output
+  node.select("text").transition(t)
+    // if the box is too small (20x20 pixels) then do not display anything!
+    .style("display", d => (d.x1 - d.x0 < 20 || d.y1 - d.y0 < 20) ? "none" : "block");
+
+  // recalculate the clipPath thingy
+  node.select("clipPath rect").transition(t)
     .attr("width", d => d.x1 - d.x0)
     .attr("height", d => d.y1 - d.y0);
-  
+
+  // ========================================
   // EXIT
+  // ========================================
   node.exit().transition(t)
     .style("opacity", 0)
     .remove();
