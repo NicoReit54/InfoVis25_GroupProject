@@ -152,13 +152,24 @@ const plotTreeMap = function(root) {
       .attr("height", d => d.y1 - d.y0);
   
   nodeEnter.append("text")
+    .attr("clip-path", (d, i) => `url(#clip-${i})`)
+    .style("display", d => (d.x1 - d.x0 < 20 || d.y1 - d.y0 < 20) ? "none" : "block")
+    .html(d => `
+      <tspan x=5 y=15 font-weight="bold">${d.data[0]}</tspan>
+      <tspan x=5 y=30 fill-opacity=0.7>${d.parent.data[0]}</tspan>
+      <tspan x=5 y=45 fill-opacity=0.7>${d.parent.parent.data[0]}</tspan>
+      <tspan x=5 y=60 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>
+    `);
+    
+  /*
+  nodeEnter.append("text")
     .attr("clip-path", (d, i) => `url(#clip-${i})`) 
     // if the box is too small (20x20 pixels) then do not display anything!
     .style("display", d => (d.x1 - d.x0 < 20 || d.y1 - d.y0 < 20) ? "none" : "block")
     .html(d =>`<tspan x=5 y=15 font-weight="bold">${d.data[0]}</tspan>
                 <tspan x=5 y=30 fill-opacity=0.7>${d.parent.data[0]}</tspan>
                 <tspan x=5 y=45 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>`);
-
+*/
   // ========================================
   // UPDATE MODE (update with transition())
   // ========================================
@@ -183,16 +194,32 @@ const plotTreeMap = function(root) {
               \nAvg Rating: ${d3.format(".2f")(d.data[1].avg_rating)}
               \nAvg Bedrooms: ${d3.format(".2")(d.data[1].avg_bedrooms)}
               \nAvg Beds: ${d3.format(".2")(d.data[1].avg_beds)}`);
-  
-  // for recalculating when to block text output
-  node.select("text").transition(t)
-    // if the box is too small (20x20 pixels) then do not display anything!
-    .style("display", d => (d.x1 - d.x0 < 20 || d.y1 - d.y0 < 20) ? "none" : "block");
 
   // recalculate the clipPath thingy
+  node.select("clipPath")
+      .attr("id", (d, i) => `clip-${i}`);
+
   node.select("clipPath rect").transition(t)
     .attr("width", d => d.x1 - d.x0)
     .attr("height", d => d.y1 - d.y0);
+
+  // Remove old text
+  node.select("text").remove();
+
+  // Append fresh text with fade-in
+  node.append("text")
+    .attr("clip-path", (d, i) => `url(#clip-${i})`)
+    .style("display", d => (d.x1 - d.x0 < 20 || d.y1 - d.y0 < 20) ? "none" : "block")
+    .style("opacity", 0) // start invisible
+    .html(d => `
+      <tspan x=5 y=15 font-weight="bold">${d.data[0]}</tspan>
+      <tspan x=5 y=30 fill-opacity=0.7>${d.parent.data[0]}</tspan>
+      <tspan x=5 y=45 fill-opacity=0.7>${d.parent.parent.data[0]}</tspan>
+      <tspan x=5 y=60 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>
+    `)
+    .transition()        // apply transition
+    .duration(500)       // half a second
+    .style("opacity", 1); // fade in
 
   // ========================================
   // EXIT
