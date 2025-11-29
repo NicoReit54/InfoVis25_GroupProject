@@ -116,11 +116,15 @@ const plotTreeMap = function(root) {
   // 4. Add leave nodes to the SVG element
   // This is basically the JOIN step from the Tutorial as we add the data to the svg (be it that there was none before)
   
-  // JOIN
+  // ========================================
+  // JOIN (the (potentially) old and new)
+  // ========================================
   const node = svg.selectAll("g") // TODO: Look up <a> element in HTML, has something to do with hyperlinks acc. to Tutorial
    .data(root.leaves(), d => d.data[0]);
   
-  // ENTER MODE
+  // ========================================
+  // ENTER MODE (create the "new" nodes)
+  // ========================================
   const nodeEnter = node.enter().append("g")
     .attr("transform", d => `translate(${d.x0}, ${d.y0})`);
   
@@ -148,12 +152,15 @@ const plotTreeMap = function(root) {
     .attr("font-weight", "bold")
     .text(d => d.data[0]);
 
+  // ========================================
+  // UPDATE MODE (update with transition())
+  // ========================================
+
   // set transition variable
   const t = d3.transition()
     .duration(1000) // 1 sec
     .ease(d3.easeSin); 
-
-  // UPDATE MODE (update with transition())
+  
   node.transition(t)
     .attr("transform", d => `translate(${d.x0}, ${d.y0})`);
   
