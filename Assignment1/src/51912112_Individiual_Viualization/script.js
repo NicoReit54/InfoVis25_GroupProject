@@ -139,7 +139,7 @@ const plotTreeMap = function(root) {
 
   // enter/append the tooltip 
   nodeEnter.append("title")
-    .text(d => `${d.data[0]} (${d.parent.data[0]})
+    .text(d => `(L1: ${d.parent.parent.data[0]} // L2: ${d.parent.data[0]} // L3: ${d.data[0]})
               \nAvg Price: ${d3.format(".2f")(d.data[1].avg_price)}
               \nAvg Rating: ${d3.format(".2f")(d.data[1].avg_rating)}
               \nAvg Bedrooms: ${d3.format(".2")(d.data[1].avg_bedrooms)}
@@ -156,8 +156,8 @@ const plotTreeMap = function(root) {
     .style("display", d => (d.x1 - d.x0 < 20 || d.y1 - d.y0 < 20) ? "none" : "block")
     .html(d => `
       <tspan x=5 y=15 font-weight="bold">${d.data[0]}</tspan>
-      <tspan x=5 y=30 fill-opacity=0.7>${d.parent.data[0]}</tspan>
-      <tspan x=5 y=45 fill-opacity=0.7>${d.parent.parent.data[0]}</tspan>
+      <tspan x=5 y=30 fill-opacity=0.7> Beds: ${d3.format(".3")(d.data[1].avg_beds)}</tspan>
+      <tspan x=5 y=45 fill-opacity=0.7> Rating: ${d3.format(".3")(d.data[1].avg_rating)}</tspan>
       <tspan x=5 y=60 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>
     `);
     
@@ -180,7 +180,7 @@ const plotTreeMap = function(root) {
   
   // tooltips
   node.select("title").transition(t)
-    .text(d => `${d.data[0]} (${d.parent.data[0]})
+    .text(d => `(L1: ${d.parent.parent.data[0]} // L2: ${d.parent.data[0]} // L3: ${d.data[0]})
               \nAvg Price: ${d3.format(".2f")(d.data[1].avg_price)}
               \nAvg Rating: ${d3.format(".2f")(d.data[1].avg_rating)}
               \nAvg Bedrooms: ${d3.format(".2")(d.data[1].avg_bedrooms)}
@@ -204,8 +204,8 @@ const plotTreeMap = function(root) {
     .style("opacity", 0) // start invisible
     .html(d => `
       <tspan x=5 y=15 font-weight="bold">${d.data[0]}</tspan>
-      <tspan x=5 y=30 fill-opacity=0.7>${d.parent.data[0]}</tspan>
-      <tspan x=5 y=45 fill-opacity=0.7>${d.parent.parent.data[0]}</tspan>
+      <tspan x=5 y=30 fill-opacity=0.7> Beds: ${d3.format(".3")(d.data[1].avg_beds)}</tspan>
+      <tspan x=5 y=45 fill-opacity=0.7> Rating: ${d3.format(".3")(d.data[1].avg_rating)}</tspan>
       <tspan x=5 y=60 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>
     `)
     // apply transition to full opacity
