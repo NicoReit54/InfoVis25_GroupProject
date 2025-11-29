@@ -103,6 +103,9 @@ function buildHierarchy(data, level1, level2, level3) {
 const plotTreeMap = function(root) {
   const width = 1500, height = 800;
 
+  // Clear previous chart if already here
+  d3.select("#treemap").selectAll("*").remove();
+
   const svg = d3.select("#treemap")
     .append("svg")
     .attr("viewBox", [0, 0, width, height])
@@ -167,21 +170,10 @@ const plotTreeMap = function(root) {
 }
 
 
-// Listen for dropdown changes
-/*["level1","level2","level3"].forEach(id => {
-  document.getElementById(id).addEventListener("change", updateTreemap);
-});
 
-function updateTreemap() {
-  const level1 = document.getElementById("level1").value;
-  const level2 = document.getElementById("level2").value;
-  const level3 = document.getElementById("level3").value;
-  const root = buildHierarchy(level1, level2, level3);
-  drawTreemap(root);
-}
-*/
 
 // LOAD THE DATA and pass it to the functions
+let globalData; // declare it here so we can reuse later after "initial render"
 
 // We have to adapt the data types as all are strings!
 d3.csv("vis_data.csv", d => ({
@@ -197,6 +189,7 @@ d3.csv("vis_data.csv", d => ({
   price: +d.price,
   rating_bucket: d.rating_bucket
 })).then(data => {
+  globalData = data;
   console.log(data[0]);
   console.log(data);
   // okay nice, super simple layout! (
@@ -207,3 +200,19 @@ d3.csv("vis_data.csv", d => ({
   let root = buildHierarchy(data, "rating_bucket", "room_type", "property_type",);
   plotTreeMap(root);
 });
+
+
+function updateTreemap() {
+  const level1 = document.getElementById("level1").value;
+  const level2 = document.getElementById("level2").value;
+  const level3 = document.getElementById("level3").value;
+  console.log(level1, level2, level3);
+  const root = buildHierarchy(globalData, level1, level2, level3);
+  console.log(root)
+  plotTreeMap(root);
+}
+// Listen for dropdown changes
+["level1","level2","level3"].forEach(id => {
+  document.getElementById(id).addEventListener("change", updateTreemap);
+});
+
