@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Individual Assignment 3 - Information Visualization 2025 - Nico Reiterer</title>
+	<link rel="stylesheet" type="text/css" href="./style.css">
+</head>
+<body>
+	<h1 class="responsive-svg-container">Treemap based on number of Airbnbs in Chicago <h1></h1>
+	<div class="layout">
+    	<!-- Controls column -->
+    	<div class="controls">
+			<label for="level1">Level 1</label>
+			<select id="level1">
+				<option value="rating_bucket">Rating Bucket</option>
+				<option value="room_type">Room Type</option>
+				<option value="property_type">Property Type</option>
+      		</select>
+
+			<label for="level2">Level 2</label>
+			<select id="level2">
+				<option value="room_type">Room Type</option>
+				<option value="property_type">Property Type</option>
+				<option value="rating_bucket">Rating Bucket</option>
+			</select>
+			<label for="level3">Level 3</label>
+			<select id="level3">
+				<option value="property_type">Property Type</option>
+				<option value="room_type">Room Type</option>
+				<option value="rating_bucket">Rating Bucket</option>
+			</select>
+    </div>
+
+	<div id="treemap" class="responsive-svg-container"></div>
+
+	<!-- Load your scripts here -->
+	<script src="https://d3js.org/d3.v7.min.js"></script>
+	<script src="https://d3js.org/d3-collection.v1.min.js"></script>
+	<script src="./script.js"></script>
+</body>
+</html>
