@@ -161,15 +161,6 @@ const plotTreeMap = function(root) {
       <tspan x=5 y=60 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>
     `);
     
-  /*
-  nodeEnter.append("text")
-    .attr("clip-path", (d, i) => `url(#clip-${i})`) 
-    // if the box is too small (20x20 pixels) then do not display anything!
-    .style("display", d => (d.x1 - d.x0 < 20 || d.y1 - d.y0 < 20) ? "none" : "block")
-    .html(d =>`<tspan x=5 y=15 font-weight="bold">${d.data[0]}</tspan>
-                <tspan x=5 y=30 fill-opacity=0.7>${d.parent.data[0]}</tspan>
-                <tspan x=5 y=45 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>`);
-*/
   // ========================================
   // UPDATE MODE (update with transition())
   // ========================================
@@ -206,7 +197,7 @@ const plotTreeMap = function(root) {
   // Remove old text
   node.select("text").remove();
 
-  // Append fresh text with fade-in
+  // Append fresh text with fade-in (we do not need to morph like with the tiles, doesnt make sense for text)
   node.append("text")
     .attr("clip-path", (d, i) => `url(#clip-${i})`)
     .style("display", d => (d.x1 - d.x0 < 20 || d.y1 - d.y0 < 20) ? "none" : "block")
@@ -217,9 +208,9 @@ const plotTreeMap = function(root) {
       <tspan x=5 y=45 fill-opacity=0.7>${d.parent.parent.data[0]}</tspan>
       <tspan x=5 y=60 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>
     `)
-    .transition()        // apply transition
-    .duration(500)       // half a second
-    .style("opacity", 1); // fade in
+    // apply transition to full opacity
+    .transition(t)
+    .style("opacity", 1); 
 
   // ========================================
   // EXIT
@@ -227,34 +218,7 @@ const plotTreeMap = function(root) {
   node.exit().transition(t)
     .style("opacity", 0)
     .remove();
-
-/*
-  // 5. Add the tooltip to each node 
-  node.append("title")
-  .text(d => `${d.data[0]} (${d.parent.data[0]})
-              \nAvg Price: ${d3.format(".2f")(d.data[1].avg_price)}
-              \nAvg Rating: ${d3.format(".2f")(d.data[1].avg_rating)}
-              \nAvg Bedrooms: ${d3.format(".2")(d.data[1].avg_bedrooms)}
-              \nAvg Beds: ${d3.format(".2")(d.data[1].avg_beds)}`);
-
-  // 6. Add text to each node
-  node.append("clipPath")
-        .attr("id", (d, i) => `clip-${i}`)
-      .append("rect")
-       .attr("width", d => d.x1 - d.x0)
-       .attr("height", d => d.y1 - d.y0)
-
-  node.append("text")
-        // adding a clip-path cuts everything that is below in the html structure so the text does not go over the square!!
-        // inspect the text to see exactly, but its just above the actual text value so it makes sense!
-       .attr("clip-path", (d, i) => `url(#clip-${i})`) 
-       .html(d =>`<tspan x=5 y=15 font-weight="bold">${d.data[0]}</tspan>
-                  <tspan x=5 y=30 fill-opacity=0.7>${d.parent.data[0]}</tspan>
-                  <tspan x=5 y=45 fill-opacity=0.7>${d.parent.parent.data[0]}</tspan>
-                  <tspan x=5 y=60 fill-opacity=0.7>${d3.format("$.3s")(d.data[1].avg_price)}</tspan>`)
-
-*/
-                }
+  }
 
 
 // create the SVG once here (previously it was in the plotTreeMap function #BigLearning)
@@ -270,12 +234,14 @@ const svg = d3.select("#treemap")
   .attr("font-family", "sans-serif")
   .attr("font-size", "10px");
 
-
+// ========================================
 // LOAD THE DATA and pass it to the functions
+// ========================================
 let globalData; // declare it here so we can reuse later after "initial render"
 
-// We have to adapt the data types as all are strings!
+
 d3.csv("vis_data.csv", d => ({
+  // We have to adapt the data types as all are strings!
   // + in front of the loaded row (here d) means "convert to number"
   latitude: +d.latitude,
   longitude: +d.longitude,
@@ -300,7 +266,7 @@ d3.csv("vis_data.csv", d => ({
   plotTreeMap(root);
 });
 
-
+// update the trrempa based on the levels choosen by the user!
 function updateTreemap() {
   const level1 = document.getElementById("level1").value;
   const level2 = document.getElementById("level2").value;
