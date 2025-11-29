@@ -101,19 +101,10 @@ function buildHierarchy(data, level1, level2, level3) {
 
 // TODO: Adapt for our purpose
 const plotTreeMap = function(root) {
-  const width = 1500, height = 800;
+
 
   // Clear previous chart if already here
   //d3.select("#treemap").selectAll("*").remove();
-
-  const svg = d3.select("#treemap")
-    .append("svg")
-    .attr("viewBox", [0, 0, width, height])
-    .attr("width", width)
-    .attr("height", height)
-    .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
-    .attr("font-family", "sans-serif")
-    .attr("font-size", "10px");
 
   console.log(root) // This format I do not entirely get but I also did not during the tutorial
 
@@ -128,7 +119,7 @@ const plotTreeMap = function(root) {
   console.log(root.leaves()[0]);
 
   // 4. Add leave nodes to the SVG element
-  const node = svg.selectAll("a") // TODO look up <a> element in HTML, has something to do with hyperlinks
+  let node = svg.selectAll("a") // TODO look up <a> element in HTML, has something to do with hyperlinks
    .data(root.leaves(), d => d.data[0]);
   
   const nodeEnter = node.enter().append("a")
@@ -143,8 +134,23 @@ const plotTreeMap = function(root) {
    .attr("height", d => d.y1 - d.y0);
 
   console.log(nodeEnter);
+  
+  const t = d3.transition()
+    .duration(1000) // 1 sec
+    .ease(d3.easeSin); 
 
-  // 5. Add the tooltip to each node
+  // UPDATE now with transition()
+  node.transition(t)
+    .attr("transform", d => `translate(${d.x0}, ${d.y0})`);
+  
+  node.select("rect").transition(t)
+    .attr("width", d => d.x1 - d.x0)
+    .attr("height", d => d.y1 - d.y0);
+    
+  // EXIT
+  node.exit().remove();
+
+  // 5. Add the tooltip to each node 
   node.append("title")
   .text(d => `${d.data[0]} (${d.parent.data[0]})
               \nAvg Price: ${d3.format(".2f")(d.data[1].avg_price)}
@@ -172,6 +178,16 @@ const plotTreeMap = function(root) {
 }
 
 
+// create the SVG once here
+const width = 1500, height = 800;
+const svg = d3.select("#treemap")
+  .append("svg")
+  .attr("viewBox", [0, 0, width, height])
+  .attr("width", width)
+  .attr("height", height)
+  .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
+  .attr("font-family", "sans-serif")
+  .attr("font-size", "10px");
 
 
 // LOAD THE DATA and pass it to the functions
