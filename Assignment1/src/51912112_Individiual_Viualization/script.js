@@ -104,7 +104,7 @@ const plotTreeMap = function(root) {
   const width = 1500, height = 800;
 
   // Clear previous chart if already here
-  d3.select("#treemap").selectAll("*").remove();
+  //d3.select("#treemap").selectAll("*").remove();
 
   const svg = d3.select("#treemap")
     .append("svg")
@@ -129,19 +129,20 @@ const plotTreeMap = function(root) {
 
   // 4. Add leave nodes to the SVG element
   const node = svg.selectAll("a") // TODO look up <a> element in HTML, has something to do with hyperlinks
-   .data(root.leaves())
-   .join("a")
+   .data(root.leaves(), d => d.data[0]);
+  
+  const nodeEnter = node.enter().append("a")
     .attr("transform", d => `translate(${d.x0}, ${d.y0})`);
   
-  console.log(node);
+  console.log(nodeEnter);
   
-  node.append("rect")
+  nodeEnter.append("rect")
    .attr("fill", d => color(d.parent.parent.data[0]))
    .attr("fill-opacity", 0.5)
    .attr("width", d => d.x1 - d.x0)
    .attr("height", d => d.y1 - d.y0);
 
-  console.log(node);
+  console.log(nodeEnter);
 
   // 5. Add the tooltip to each node
   node.append("title")
