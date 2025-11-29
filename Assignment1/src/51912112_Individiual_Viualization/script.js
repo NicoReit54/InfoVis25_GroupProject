@@ -10,32 +10,6 @@ const color = d3.scaleOrdinal([
   "#44AAAA", "#77CCCC", "#117744",  "#88CCAA", "#777711", "#AAAA44", 
   "#DDDD77", "#774411", "#AA7744", "#771122", "#AA4455", "#DD7788"])
 
-// We have to adapt the data types as all are strings!
-d3.csv("vis_data.csv", d => ({
-  // + in front of the loaded row (here d) means "convert to number"
-  latitude: +d.latitude,
-  longitude: +d.longitude,
-  property_type: d.property_type,
-  room_type: d.room_type,
-  review_scores_rating: +d.review_scores_rating,
-  accommodates: +d.accommodates,
-  bedrooms: +d.bedrooms,
-  beds: +d.beds,
-  price: +d.price,
-  rating_bucket: d.rating_bucket
-})).then(data => {
-  console.log(data[0]);
-  console.log(data);
-  // okay nice, super simple layout! (
-  // basically each row like 
-  // {latitude: '41.89634', longitude: '-87.65608', property_type: 'Entire rental unit', room_type: 'Entire home/apt', review_scores_rating: '4.9', …})
-
-  // I have already implemented the color legend.
-  //createColorLegend(data);
-
-  // and tree map.
-  plotTreeMap(data);
-});
 
 
 const createColorLegend = function(data) {
@@ -85,23 +59,14 @@ const createColorLegend = function(data) {
         <div class="swatches-label">${d.value}</div>`);
 }
 
-// TODO: Adapt for our purpose
-const plotTreeMap = function(data) {
-  const width = 1500, height = 800;
 
-  const svg = d3.select("#treemap")
-    .append("svg")
-    .attr("viewBox", [0, 0, width, height])
-    .attr("width", width)
-    .attr("height", height)
-    .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
-    .attr("font-family", "sans-serif")
-    .attr("font-size", "10px");
+function buildHierarchy(data, level1, level2, level3) {
+  // This whole block I pulled out of original plotTreeMap function to make 
+  // it dynamic (i.e. call it more than once)
 
   // 1. Transform the node data to hierarcical format 
   // >> Really important for the d3TreeMap to recognize how to put the layout!!
   // Ref: https://d3js.org/d3-array/group and https://observablehq.com/@d3/d3-group
-
   const group = d3.rollup(
     data,
     v => ({
@@ -112,12 +77,11 @@ const plotTreeMap = function(data) {
       avg_beds: d3.mean(v, d => d.beds),		
       count: v.length
     }),
-    d => d.rating_bucket,
-    d => d.room_type, // first group
-    d => d.property_type // second level
+    // user choice for levels
+    d => d[level1],   
+    d => d[level2],
+    d => d[level3]
   );
-
-  console.log(group)
 
   // 2. Create the hierarchical layout with d3.hierarchy
   // Ref: https://d3js.org/d3-hierarchy/hierarchy
@@ -128,12 +92,25 @@ const plotTreeMap = function(data) {
   //}
   // This allows us to pass the result of group or rollup to hierarchy
   // So it checks whether the child is another array and expands it in the case 
-
-  const root = d3.hierarchy(group, ([key, value]) =>
+  return d3.hierarchy(group, ([key, value]) =>
     value instanceof Map ? Array.from(value) : null
   )
   .sum(([key, value]) => value.count)
   .sort((a, b) => d3.descending(a.value, b.value));
+}
+
+// TODO: Adapt for our purpose
+const plotTreeMap = function(root) {
+  const width = 1500, height = 800;
+
+  const svg = d3.select("#treemap")
+    .append("svg")
+    .attr("viewBox", [0, 0, width, height])
+    .attr("width", width)
+    .attr("height", height)
+    .attr("style", "max-width: 100%; height: auto; height: intrinsic;")
+    .attr("font-family", "sans-serif")
+    .attr("font-size", "10px");
 
   console.log(root) // This format I do not entirely get but I also did not during the tutorial
 
@@ -165,7 +142,7 @@ const plotTreeMap = function(data) {
 
   // 5. Add the tooltip to each node
   node.append("title")
-  .text(d => `${d.data[0]} (${d.parent.parent.data[0]})
+  .text(d => `${d.data[0]} (${d.parent.data[0]})
               \nAvg Price: ${d3.format(".2f")(d.data[1].avg_price)}
               \nAvg Rating: ${d3.format(".2f")(d.data[1].avg_rating)}
               \nAvg Bedrooms: ${d3.format(".2")(d.data[1].avg_bedrooms)}
@@ -190,32 +167,8 @@ const plotTreeMap = function(data) {
 }
 
 
-// TODO: Make it properly dynamic
-function buildHierarchy(level1, level2, level3) {
-  const group = d3.rollup(
-    data,
-    v => ({
-      avg_price: d3.mean(v, d => d.price),
-      avg_rating: d3.mean(v, d => d.review_scores_rating),
-      count: v.length
-    }),
-    d => d[level1],   // user choice for level 1
-    d => d[level2],   // user choice for level 2
-    d => d[level3]    // user choice for level 3
-  );
-
-  return d3.hierarchy(group, ([key, value]) =>
-    value instanceof Map ? Array.from(value) : null
-  )
-  .sum(([key, value]) => value.count); 
-}
-
-// Initial render
-let root = buildHierarchy("property_type", "rating_bucket", "room_type");
-drawTreemap(root);
-
 // Listen for dropdown changes
-["level1","level2","level3"].forEach(id => {
+/*["level1","level2","level3"].forEach(id => {
   document.getElementById(id).addEventListener("change", updateTreemap);
 });
 
@@ -226,3 +179,31 @@ function updateTreemap() {
   const root = buildHierarchy(level1, level2, level3);
   drawTreemap(root);
 }
+*/
+
+// LOAD THE DATA and pass it to the functions
+
+// We have to adapt the data types as all are strings!
+d3.csv("vis_data.csv", d => ({
+  // + in front of the loaded row (here d) means "convert to number"
+  latitude: +d.latitude,
+  longitude: +d.longitude,
+  property_type: d.property_type,
+  room_type: d.room_type,
+  review_scores_rating: +d.review_scores_rating,
+  accommodates: +d.accommodates,
+  bedrooms: +d.bedrooms,
+  beds: +d.beds,
+  price: +d.price,
+  rating_bucket: d.rating_bucket
+})).then(data => {
+  console.log(data[0]);
+  console.log(data);
+  // okay nice, super simple layout! (
+  // basically each row like 
+  // {latitude: '41.89634', longitude: '-87.65608', property_type: 'Entire rental unit', room_type: 'Entire home/apt', review_scores_rating: '4.9', …})
+
+  // Initial render
+  let root = buildHierarchy(data, "rating_bucket", "room_type", "property_type",);
+  plotTreeMap(root);
+});
