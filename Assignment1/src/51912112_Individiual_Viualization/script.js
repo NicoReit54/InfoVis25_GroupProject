@@ -1,68 +1,12 @@
-// COMMENTS
-// d3-force module is for networks! Basically when we do not know the absolute points of the data in the room
-// but rather the relative connection between them
-
-
-// TODO: Inspect whether we need the following:
-// Set 21-color scheme https://www.r-bloggers.com/2013/02/the-paul-tol-21-color-salute/
+// Set 21-color scheme as in tutorial because why not https://www.r-bloggers.com/2013/02/the-paul-tol-21-color-salute/
 const color = d3.scaleOrdinal([
   "#771155", "#114477", "#44AA77", "#DDAA77", "#AA4488", "#CC99BB",  "#4477AA", "#77AADD", "#117777", 
   "#44AAAA", "#77CCCC", "#117744",  "#88CCAA", "#777711", "#AAAA44", 
   "#DDDD77", "#774411", "#AA7744", "#771122", "#AA4455", "#DD7788"])
 
-
-
-const createColorLegend = function(data) {
-  // d3.nest() creates a "nest" operator used to group an array of data
-  // into keyed buckets. It's a builder pattern: you configure how to
-  // group (key), optionally how to reduce each group (rollup), and then
-  // execute the grouping (entries / map / object).
-  let sections = d3.nest()
-    // .key(...) defines the grouping key function. For each element `d`
-    // in `nodes`, this function returns the key used to group it.
-    // Here, all items with the same value of d['Section ID'] will be
-    // placed in the same group.
-    .key(d => d['Section ID'])
-    // .rollup(...) defines a function that reduces each group's array
-    // of values to a single value. Without rollup, each group's `value`
-    // would be the array of items in that group.
-    //
-    // rollup(d => d[0]['Section']) receives the array of items in a
-    // group (we named it `d` here) and returns the 'Section' field
-    // from the first item in that array. Effectively this maps:
-    //   groupKey -> sectionName
-    //
-    // Note: this assumes every item in a group has the same 'Section'
-    // value and that the group is non-empty.
-    .rollup(d => d[0]['Section'])
-  // .entries(nodes) actually runs the nest on the `nodes` array and
-  // returns an array of objects like:
-  //   [{ key: "section-id-1", value: "Section Name 1" },
-  //    { key: "section-id-2", value: "Section Name 2" },
-  //    ...]
-  // If rollup were omitted, `value` would be the array of grouped items.
-  .entries(data);
-
-  sections = sections.sort((a, b) => d3.ascending(+a.key, +b.key))
-
-  // here we select the legend
-  const legend = d3.select("#legend")
-    .style("font-family", "sans-serif")
-    .style("font-size", "10px");
-
-  // here we select the div of the legend and join it with the data
-  legend.selectAll("div")
-    .data(sections)
-    .join("div")
-      .attr('class', 'swatches-item')
-      .html(d => `<div class="swatches-swatch" style="background: ${color(+d.key - 1)};"></div>
-        <div class="swatches-label">${d.value}</div>`);
-}
-
-
 function buildHierarchy(data, level1, level2, level3) {
-  // This whole block I pulled out of original plotTreeMap function to make 
-  // it dynamic (i.e. call it more than once)
+  // This buildHierarchiy was originally a whole block which I pulled out of original plotTreeMap 
+  // function to make it dynamic (i.e. call it more than once)
 
   // 1. Transform the node data to hierarcical format 
   // >> Really important for the d3TreeMap to recognize how to put the layout!!
