@@ -62,11 +62,12 @@ const plotTreeMap = function(root) {
   // ========================================
   // JOIN (the (potentially) old and new)
   // ========================================
-  const node = svg.selectAll("g") // TODO: Look up <a> element in HTML, has something to do with hyperlinks acc. to Tutorial
-   .data(root.leaves(), d => d.data[0]);
+  const node = svg.selectAll("g") 
+    .data(root.leaves(), d => d.data[0]);
   
   // ========================================
-  // ENTER MODE (create the "new" nodes)
+  // ENTER MODE 
+  // Create the new nodes in case they are not here already
   // ========================================
   const nodeEnter = node.enter().append("g")
     .attr("transform", d => `translate(${d.x0}, ${d.y0})`);
@@ -109,6 +110,8 @@ const plotTreeMap = function(root) {
     
   // ========================================
   // UPDATE MODE (update with transition())
+  // It basically takes what is there and then 
+  // transitions into what is added
   // ========================================
 
   // set transition variable
@@ -141,12 +144,13 @@ const plotTreeMap = function(root) {
     .attr("width", d => d.x1 - d.x0)
     .attr("height", d => d.y1 - d.y0);
 
-  // Remove old text
+  // Remove old text to add it afterwards (we do not need to morph like with the tiles, doesnt make sense for text)
   node.select("text").remove();
 
-  // Append fresh text with fade-in (we do not need to morph like with the tiles, doesnt make sense for text)
+  // Append fresh text with fade-in transition
   node.append("text")
     .attr("clip-path", (d, i) => `url(#clip-${i})`)
+    // for this style attribute I asked CoPilot for input on how to manage this
     .style("display", d => (d.x1 - d.x0 < 20 || d.y1 - d.y0 < 20) ? "none" : "block")
     .style("opacity", 0) // start invisible
     .html(d => `
@@ -162,6 +166,7 @@ const plotTreeMap = function(root) {
 
   // ========================================
   // EXIT
+  // Delete what is not anymore here
   // ========================================
   node.exit().transition(t)
     .style("opacity", 0)
@@ -185,8 +190,10 @@ const svg = d3.select("#treemap")
 // ========================================
 // LOAD THE DATA and pass it to the functions
 // ========================================
-let globalData; // declare it here so we can reuse later after "initial render"
+// declare it here so we can reuse later after "initial render" 
+// maybe there is a smoother way but lets keep it like that for now
 
+let globalData; 
 
 d3.csv("vis_data.csv", d => ({
   // We have to adapt the data types as all are strings!
@@ -225,6 +232,7 @@ function updateTreemap() {
   plotTreeMap(root);
 }
 // Listen for dropdown changes
+// Ref: This I got from CoPilot as I am not familiar with HTML development
 ["level1","level2","level3"].forEach(id => {
   document.getElementById(id).addEventListener("change", updateTreemap);
 });
