@@ -10,3 +10,7 @@ Repo for colaboration on the course 193.187 Information Visualization (VU 4,0) 2
 ## Links
 + Discord: https://discord.gg/hENYAWED
 + Overleaf Document: https://www.overleaf.com/7872281171wdybkmqczfxp#ddfdbd
+
+## Individiual Visualizations:
++ Nico: https://nicoreit54.github.io/InfoVis25/51912112_Individual_Visualization/index.html
++ 
