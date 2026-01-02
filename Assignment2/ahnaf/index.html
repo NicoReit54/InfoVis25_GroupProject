@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Individual Assignment 3 - Information Visualization 2025 - Ahnaf Karim</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Crime Count vs Number of Airbnb Listings by District</h1>
+        
+        <div class="controls">
+            <p>Filter Options</p>
+            
+            <label for="districtFilter">District</label>
+            <select id="districtFilter">
+                <option value="all">All Districts</option>
+            </select>
+            
+            <label for="roomType">Room Type</label>
+            <select id="roomType">
+                <option value="all">All Room Types</option>
+            </select>
+        </div>
+        
+        <div id="chart"></div>
+        
+        <div id="legend"></div>
+    </div>
+    
+    <script src="d3.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
