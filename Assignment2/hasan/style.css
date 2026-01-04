@@ -1,0 +1,78 @@
+body {
+  font-family: 'Arial', sans-serif; 
+}
+
+.responsive-svg-container {
+  margin-right: auto;
+  margin-left: auto;
+  width: 100%;
+  max-width: 1200px;
+  border: 1px solid grey; 
+}
+
+/* grid lines */
+.y-grid .tick line {
+  stroke: #cccccc; 
+  stroke-opacity: 0.5; /* transparency */
+  stroke-width: 2;
+}
+
+/* labels/values in axis */
+.largeChart .axis text {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+/* tooltip style */
+.tooltip {
+  font-size: 14px ;  
+  background-color: rgba(0, 0, 0, 0.8); 
+  color: #fff;  
+  padding: 5px;  
+  border-radius: 3px;  
+  visibility: hidden; 
+  position: absolute; 
+}
+
+/* axis titles */
+.axis-label {
+  font-family: Arial, sans-serif;
+  font-weight: bold;
+  fill: black; 
+}
+
+/* dropdown menu */
+#selectButton {
+  font-size: 16px;
+  font-weight: bold;
+  padding: 5px;  
+  border-radius: 5px;
+  border-width: 2px;
+  border-color: black;
+}
+
+/* options in dropdown menu */
+#selectButton option {
+  font-size: 16px; 
+}
+
+/* text next to dropdown menu */
+#form label {
+  font-size: 16px; 
+  font-weight: bold; 
+}
+
+/* domain line of x-axis */
+.x-axis .domain {
+    stroke-width: 2px;
+}
+
+/* domain line of y-axis */
+.y-axis .domain {
+    stroke-width: 2px;
+}
+
+/* tick lines */
+.axis line {
+    stroke-width: 2px; 
+}
