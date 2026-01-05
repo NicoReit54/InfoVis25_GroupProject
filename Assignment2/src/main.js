@@ -42,18 +42,36 @@ const svg_treemap = d3.select("#treemap")
     .attr("font-size", "10px");
 
 
-function populateNeighborhoodDropdown(geojson) {
+function populateNeighborhoodDropdown(airbnbData) {
     const select = document.getElementById("neighborhoodSelect");
-    geojson.features
-    .map(f => f.properties.neighborhood)
-    .sort()
-    .forEach(name => {
+
+    // clear existing options (important if re-called)
+    select.innerHTML = "";
+
+    // Add "All" option at the top
+    const allOption = document.createElement("option");
+    allOption.value = "All";
+    allOption.textContent = "All Neighborhoods";
+    select.appendChild(allOption);
+
+    // Extract unique neighborhood names
+    const neighborhoods = Array.from(
+    new Set(
+        airbnbData
+        .map(d => d.neighborhood_cleansed)
+        .filter(d => d && d.trim() !== "")
+    )
+    ).sort();
+    console.log(neighborhoods)
+    // Populate dropdown
+    neighborhoods.forEach(name => {
         const option = document.createElement("option");
         option.value = name;
         option.textContent = name;
         select.appendChild(option);
-});
+  });
 }
+
 
 // ======================================================
 // Global filters
@@ -63,17 +81,16 @@ function applyGlobalFilters(data) {
     if (state.global.neighborhood === "All") { 
         return data; 
     } 
-    const neighborhoodFeature = data.geo.features.find( 
-        f => f.properties.neighborhood === state.global.neighborhood 
-    ); 
+    console.log("filter mode")
+    console.log(data.airbnb)
     return { 
-        airbnb: data.airbnb.filter(d => d3.geoContains(neighborhoodFeature, [d.longitude, d.latitude]) 
-    )
+        airbnb: data.airbnb.filter(
+            d => d.neighborhood_cleansed === state.global.neighborhood)
     /*, 
     crime: data.crime.filter(d => d3.geoContains(neighborhoodFeature, [d.longitude, d.latitude]) 
     ), 
     geo: { ...data.geo, features: [neighborhoodFeature] } */
-}; 
+    }; 
 }
 
 // ======================================================
@@ -113,7 +130,8 @@ function renderScatter(airbnbData) {
 function renderAll() { 
     // get the filtered data!
     const filtered = applyGlobalFilters(globalData); 
-    
+    console.log("hi")
+    console.log(filtered);
     // Render the plots
     renderTreemap(filtered.airbnb); 
     //renderCrimeMap(filtered.crime, filtered.geo); // placeholder 
@@ -127,12 +145,12 @@ function renderAll() {
 
 function setupEventListeners() { 
     // Global neighborhood dropdown 
-    //document
-        /*.getElementById("neighborhoodSelect")
+    document
+        .getElementById("neighborhoodSelect")
         .addEventListener("change", e => { 
             state.global.neighborhood = e.target.value; 
             renderAll(); }); 
-            */
+            
         // Treemap local controls 
         ["level1", "level2", "level3"].forEach(id => { 
             document.getElementById(id).addEventListener("change", e => {
@@ -149,11 +167,12 @@ function setupEventListeners() {
 
 // Promise.all([...]): Loads multiple files in parallel. Waits until all are finished and only then runs .then(...)
 Promise.all([
-    d3.csv("data/vis_data.csv", d => ({
+    d3.csv("data/airbnb_data.csv", d => ({
         // We have to adapt the data types as all are strings!
         // + in front of the loaded row (here d) means "convert to number"
         latitude: +d.latitude,
         longitude: +d.longitude,
+        neighborhood_cleansed: d.neighbourhood_cleansed,
         property_type: d.property_type,
         room_type: d.room_type,
         review_scores_rating: +d.review_scores_rating,
@@ -172,8 +191,9 @@ Promise.all([
     d3.json("neighborhoods.geojson")*/
 ]).then(([airbnb]) => {//, crime, geo]) => {
     globalData = { airbnb };//, crime, geo };
-
-    // populateNeighborhoodDropdown(geo); 
+    console.log(airbnb)
+    populateNeighborhoodDropdown(airbnb); 
+    //console.log(neighborhoods)
     setupEventListeners();
     renderAll();
 });
