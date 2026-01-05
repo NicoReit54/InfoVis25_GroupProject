@@ -38,7 +38,7 @@ function buildHierarchyTree(data, level1, level2, level3) {
   .sort((a, b) => d3.descending(a.value, b.value));
 }
 
-const plotTreeMap = function(root) {
+const plotTreeMap = function(root, width, height, svg) {
   console.log(root) // This format I do not entirely get but I also did not during the tutorial
   // // Set 21-color scheme as in tutorial because why not https://www.r-bloggers.com/2013/02/the-paul-tol-21-color-salute/
   const color = d3.scaleOrdinal([

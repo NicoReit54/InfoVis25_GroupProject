@@ -2,6 +2,9 @@
 import {buildHierarchyTree, plotTreeMap, updateTreemap } from "./treemap.js";
 
 
+// ======================================================
+// Define variables/states
+// ======================================================
 
 // Store the states of the global/local filters
 // For me: Objects in JS are like dictionaries / maps: E.g. state.global.neighborhood means go into state, then global and then retrieve the value of the neighborhood
@@ -21,9 +24,16 @@ const state = {
 // make globalData flexible as we dont have the data yet and need to assign it still
 let globalData;
 
+
+// ======================================================
+// SVG Setup
+// ======================================================
+
+// treemao svg setup
 const width = 600; 
 const height = 400; 
-const svg = d3.select("#treemap")
+
+const svg_treemap = d3.select("#treemap")
     .append("svg")
     .attr("viewBox", [0, 0, width, height])
     .attr("width", "100%")
@@ -47,13 +57,9 @@ function populateNeighborhoodDropdown(geojson) {
 });
 }
 
-
-
-
-
 // Promise.all([...]): Loads multiple files in parallel. Waits until all are finished and only then runs .then(...)
 Promise.all([
-    d3.csv("airbnb.csv", d => ({
+    d3.csv("data/vis_data.csv", d => ({
         // We have to adapt the data types as all are strings!
         // + in front of the loaded row (here d) means "convert to number"
         latitude: +d.latitude,
@@ -66,7 +72,8 @@ Promise.all([
         beds: +d.beds,
         price: +d.price,
         rating_bucket: d.rating_bucket
-    })),
+    }))
+    //,
 /*  d3.csv("crime.csv", d => ({
        latitude: +d.latitude,
         longitude: +d.longitude,
@@ -75,11 +82,16 @@ Promise.all([
     d3.json("neighborhoods.geojson")*/
 ]).then(([airbnb]) => {//, crime, geo]) => {
     globalData = { airbnb };//, crime, geo };
-    //populateNeighborhoodDropdown(geo);
+
+    // populateNeighborhoodDropdown(geo); 
+    // setupEventListeners();
     renderAll();
 });
 
-// for applying the global filtering
+// ======================================================
+// Global filters
+// ======================================================
+
 function applyGlobalFilters(data) { 
     if (state.global.neighborhood === "All") { 
         return data; 
@@ -97,14 +109,54 @@ function applyGlobalFilters(data) {
 }; 
 }
 
-// Central render function
+// ======================================================
+// RENDER FUNCTIONS
+// ======================================================
+
+// Treemap
+function renderTreemap(airbnbData) { 
+    const { level1, level2, level3 } = state.local.treemap; 
+    const root = buildHierarchyTree(airbnbData, level1, level2, level3); 
+    plotTreeMap(root, width, height, svg_treemap); 
+}
+/*
+// Crimemap
+function renderCrimeMap(crimeData) {
+
+;
+}
+
+// Histogram
+function renderHistogram(airbnbData) {
+
+;
+}
+
+// Scatterplot
+function renderScatter(airbnbData) {
+
+;
+}
+*/
+
+// ======================================================
+// CENTRAL RENDER FUNCTION
+// ======================================================
+
 function renderAll() { 
+    // get the filtered data!
     const filtered = applyGlobalFilters(globalData); 
+    
+    // Render the plots
     renderTreemap(filtered.airbnb); 
     //renderCrimeMap(filtered.crime, filtered.geo); // placeholder 
     //renderHistogram(filtered.airbnb); // placeholder
     //renderScatter(filtered.airbnb, filtered.crime); // placeholder 
 }
+
+// ======================================================
+// EVENT LISTENERS
+// ======================================================
 
 function setupEventListeners() { 
     // Global neighborhood dropdown 
