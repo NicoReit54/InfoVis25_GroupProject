@@ -13,14 +13,17 @@
 
 <body>
 
-  <!-- Optional global controls -->
-  <header class="global-controls">
+  <!-- TOP BAR -->
+  <header class="topbar">
     <h1>Chicago Airbnb & Crime Dashboard</h1>
-    <label for="neighborhoodSelect">Neighborhood:</label> 
-    <select id="neighborhoodSelect"></select>
+
+    <div class="global-filter">
+      <label for="neighborhoodSelect">Neighborhood</label>
+      <select id="neighborhoodSelect"></select>
+    </div>
   </header>
 
-  <!-- 2x2 dashboard grid -->
+  <!-- DASHBOARD GRID -->
   <main class="dashboard">
 
     <!-- TOP LEFT -->
@@ -33,7 +36,6 @@
     <section class="panel" id="panel-treemap">
       <h2>Airbnb Treemap</h2>
 
-      <!-- Local controls -->
       <div class="controls">
         <label>Level 1</label>
         <select id="level1">
@@ -74,8 +76,7 @@
 
   </main>
 
-  <!-- App entry point -->
   <script type="module" src="src/main.js"></script>
-
 </body>
+
 </html>
