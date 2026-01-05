@@ -1,5 +1,5 @@
 // IMPORTS
-import {buildHierarchyTree, plotTreeMap, updateTreemap } from "./treemap.js";
+import {buildHierarchyTree, plotTreeMap } from "./treemap.js";
 
 
 // ======================================================
@@ -56,37 +56,6 @@ function populateNeighborhoodDropdown(geojson) {
         select.appendChild(option);
 });
 }
-
-// Promise.all([...]): Loads multiple files in parallel. Waits until all are finished and only then runs .then(...)
-Promise.all([
-    d3.csv("data/vis_data.csv", d => ({
-        // We have to adapt the data types as all are strings!
-        // + in front of the loaded row (here d) means "convert to number"
-        latitude: +d.latitude,
-        longitude: +d.longitude,
-        property_type: d.property_type,
-        room_type: d.room_type,
-        review_scores_rating: +d.review_scores_rating,
-        accommodates: +d.accommodates,
-        bedrooms: +d.bedrooms,
-        beds: +d.beds,
-        price: +d.price,
-        rating_bucket: d.rating_bucket
-    }))
-    //,
-/*  d3.csv("crime.csv", d => ({
-       latitude: +d.latitude,
-        longitude: +d.longitude,
-        primary_type: d.primary_type
-    })),
-    d3.json("neighborhoods.geojson")*/
-]).then(([airbnb]) => {//, crime, geo]) => {
-    globalData = { airbnb };//, crime, geo };
-
-    // populateNeighborhoodDropdown(geo); 
-    // setupEventListeners();
-    renderAll();
-});
 
 // ======================================================
 // Global filters
@@ -160,15 +129,53 @@ function renderAll() {
 
 function setupEventListeners() { 
     // Global neighborhood dropdown 
-    document
-        .getElementById("neighborhoodSelect")
+    //document
+        /*.getElementById("neighborhoodSelect")
         .addEventListener("change", e => { 
             state.global.neighborhood = e.target.value; 
             renderAll(); }); 
+            */
         // Treemap local controls 
         ["level1", "level2", "level3"].forEach(id => { 
             document.getElementById(id).addEventListener("change", e => {
-                state.local.treemap[id] = e.target.value; renderAll(); 
+                state.local.treemap[id] = e.target.value; 
+                renderAll(); 
             }); 
         }); 
     }
+
+// ======================================================
+// DATA LOAD and RENDER call
+// ======================================================
+
+
+// Promise.all([...]): Loads multiple files in parallel. Waits until all are finished and only then runs .then(...)
+Promise.all([
+    d3.csv("data/vis_data.csv", d => ({
+        // We have to adapt the data types as all are strings!
+        // + in front of the loaded row (here d) means "convert to number"
+        latitude: +d.latitude,
+        longitude: +d.longitude,
+        property_type: d.property_type,
+        room_type: d.room_type,
+        review_scores_rating: +d.review_scores_rating,
+        accommodates: +d.accommodates,
+        bedrooms: +d.bedrooms,
+        beds: +d.beds,
+        price: +d.price,
+        rating_bucket: d.rating_bucket
+    }))
+    //,
+/*  d3.csv("crime.csv", d => ({
+       latitude: +d.latitude,
+        longitude: +d.longitude,
+        primary_type: d.primary_type
+    })),
+    d3.json("neighborhoods.geojson")*/
+]).then(([airbnb]) => {//, crime, geo]) => {
+    globalData = { airbnb };//, crime, geo };
+
+    // populateNeighborhoodDropdown(geo); 
+    setupEventListeners();
+    renderAll();
+});

@@ -62,7 +62,7 @@ const plotTreeMap = function(root, width, height, svg) {
   // ========================================
   // JOIN (the (potentially) old and new)
   // ========================================
-  const node = svg.selectAll("g") 
+  const node = svg.selectAll("g.treemap-node") 
     .data(root.leaves(), d => d.data[0]);
   
   // ========================================
@@ -70,6 +70,7 @@ const plotTreeMap = function(root, width, height, svg) {
   // Create the new nodes in case they are not here already
   // ========================================
   const nodeEnter = node.enter().append("g")
+    .attr("class", "treemap-node")
     .attr("transform", d => `translate(${d.x0}, ${d.y0})`);
   
   console.log(nodeEnter);
@@ -187,6 +188,5 @@ function updateTreemap() {
 // export the functions to use later
 export {
   buildHierarchyTree,
-  plotTreeMap,
-  updateTreemap
+  plotTreeMap
 };
