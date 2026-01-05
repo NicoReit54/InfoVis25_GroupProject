@@ -184,3 +184,9 @@ function updateTreemap() {
   plotTreeMap(root);
 }
 
+// export the functions to use later
+export {
+  buildHierarchyTree,
+  plotTreeMap,
+  updateTreemap
+};
