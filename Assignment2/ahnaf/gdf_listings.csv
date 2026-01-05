@@ -1,4 +1,4 @@
-neighbourhood_cleansed,room_type,crime_count,price,number_of_reviews,review_scores_rating
+neighbourhood_cleansed,room_type,crime_count,price,number_of_reviews,review_scores_rating 
 West Town,Entire home/apt,43,178.0,534,4.9
 North Center,Entire home/apt,20,228.0,107,4.92
 Lincoln Square,Entire home/apt,18,88.0,289,4.79

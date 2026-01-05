@@ -29,7 +29,7 @@ let globalData;
 // SVG Setup
 // ======================================================
 
-// treemao svg setup
+// treemap svg setup
 const width = 600; 
 const height = 400; 
 
@@ -40,8 +40,6 @@ const svg_treemap = d3.select("#treemap")
     .attr("height", "100%")
     .attr("font-family", "sans-serif")
     .attr("font-size", "10px");
-
-
 
 
 function populateNeighborhoodDropdown(geojson) {
