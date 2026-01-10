@@ -2,6 +2,8 @@ import { createMap, crimeTypeColors } from "./map.js";
 import { createScatter } from "./scatter.js";
 import { createHistogram } from "./histogram.js";
 import { createTreemap } from "./treemap.js";
+import { createCrimeBar } from "./crimeBar.js";
+import { createPriceByRoom } from "./priceByRoom.js";
 
 const state = {
     global: {
@@ -225,6 +227,15 @@ function renderAll() {
     const treemapData = applyTreemapFilter(filteredAirbnb);
     const { level1, level2, level3 } = state.local.treemap;
     createTreemap("#treemap", treemapData, level1, level2, level3, onTreemapCellClick, state.local.crossFilter.treemapFeature);
+
+    // New visualizations
+    createCrimeBar("#crimeBar", globalData.crime, filteredAirbnb, (neighborhood) => {
+        state.global.neighborhood = neighborhood;
+        document.getElementById("neighborhoodSelect").value = neighborhood;
+        renderAll();
+    });
+
+    createPriceByRoom("#priceByRoom", filteredAirbnb, state.global.neighborhood);
 }
 
 function onHistogramBarClick(category, bounds) {
