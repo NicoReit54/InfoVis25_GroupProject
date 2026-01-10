@@ -8,6 +8,10 @@ __pycache__/
 
 # files
 Assignment1/src/crime.csv
+# Assignment2/data/crime *.csv
+Assignment2/data/crime copy.csv
+Assignment2/data/crime.csv
+
 # Distribution / packaging
 .Python
 build/

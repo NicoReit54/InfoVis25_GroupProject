@@ -3,38 +3,58 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Chicago Airbnb & Crime Dashboard</title>
+  <title>Chicago Airbnb and Crime Dashboard</title>
 
   <link rel="stylesheet" href="./style.css" />
 
-  <!-- D3 -->
   <script src="https://d3js.org/d3.v7.min.js"></script>
 </head>
 
 <body>
 
-  <!-- TOP BAR -->
   <header class="topbar">
-    <h1>Chicago Airbnb & Crime Dashboard</h1>
+    <h1>Chicago Airbnb and Crime Dashboard</h1>
 
-    <div class="global-filter">
-      <label for="neighborhoodSelect">Neighborhood</label>
-      <select id="neighborhoodSelect"></select>
+    <div class="global-filters">
+      <div class="filter-group">
+        <label for="neighborhoodSelect">Neighborhood</label>
+        <select id="neighborhoodSelect"></select>
+      </div>
+
+      <div class="filter-group">
+        <label for="roomTypeSelect">Room Type</label>
+        <select id="roomTypeSelect"></select>
+      </div>
+
+      <button id="clearFilters">Clear Filters</button>
+      <span id="filterStatus" class="filter-status"></span>
     </div>
   </header>
 
-  <!-- DASHBOARD GRID -->
   <main class="dashboard">
 
-    <!-- TOP LEFT -->
     <section class="panel" id="panel-map">
-      <h2>Crime Map</h2>
+      <h2>Location Map</h2>
+      <p class="panel-hint">Scroll to zoom, drag to select. Toggle layers below:</p>
+      <div id="crimeTypeFilters" class="crime-filters"></div>
       <div id="map"></div>
     </section>
 
-    <!-- TOP RIGHT -->
+    <section class="panel" id="panel-scatter">
+      <h2>Crime vs Listings by Neighborhood</h2>
+      <p class="panel-hint">Click point to filter by neighborhood</p>
+      <div id="scatter"></div>
+    </section>
+
+    <section class="panel" id="panel-histogram">
+      <h2>Price Distribution</h2>
+      <p class="panel-hint">Click bar to filter treemap</p>
+      <div id="histogram"></div>
+    </section>
+
     <section class="panel" id="panel-treemap">
-      <h2>Airbnb Treemap</h2>
+      <h2>Airbnb Feature Breakdown</h2>
+      <p class="panel-hint">Click cell to filter histogram</p>
 
       <div class="controls">
         <label>Level 1</label>
@@ -60,18 +80,6 @@
       </div>
 
       <div id="treemap"></div>
-    </section>
-
-    <!-- BOTTOM LEFT -->
-    <section class="panel" id="panel-histogram">
-      <h2>Price Distribution</h2>
-      <div id="histogram"></div>
-    </section>
-
-    <!-- BOTTOM RIGHT -->
-    <section class="panel" id="panel-scatter">
-      <h2>Crime vs Airbnb Density</h2>
-      <div id="scatter"></div>
     </section>
 
   </main>

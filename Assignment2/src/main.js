@@ -1,178 +1,296 @@
-// IMPORTS
-import {buildHierarchyTree, plotTreeMap } from "./treemap.js";
+import { createMap, crimeTypeColors } from "./map.js";
+import { createScatter } from "./scatter.js";
+import { createHistogram } from "./histogram.js";
+import { createTreemap } from "./treemap.js";
 
-
-// ======================================================
-// Define variables/states
-// ======================================================
-
-// Store the states of the global/local filters
-// For me: Objects in JS are like dictionaries / maps: E.g. state.global.neighborhood means go into state, then global and then retrieve the value of the neighborhood
 const state = {
     global: {
-        neighborhood: "All"
+        neighborhood: "All",
+        roomType: "All",
+        brushBounds: null,
+        selectedCrimeTypes: new Set(),
+        showAirbnb: true
     },
     local: {
         treemap: {
             level1: "rating_bucket",
             level2: "room_type",
             level3: "property_type"
+        },
+        crossFilter: {
+            priceBucket: null,
+            priceBounds: null,
+            treemapFeature: null
         }
     }
 };
 
-// make globalData flexible as we dont have the data yet and need to assign it still
-let globalData;
+let globalData = {
+    airbnb: [],
+    crime: [],
+    crimeRaw: [],
+    geo: null
+};
 
+let mapInstance = null;
 
-// ======================================================
-// SVG Setup
-// ======================================================
-
-// treemap svg setup
-const width = 600; 
-const height = 400; 
-
-const svg_treemap = d3.select("#treemap")
-    .append("svg")
-    .attr("viewBox", [0, 0, width, height])
-    .attr("width", "100%")
-    .attr("height", "100%")
-    .attr("font-family", "sans-serif")
-    .attr("font-size", "10px");
-
-
-function populateNeighborhoodDropdown(airbnbData) {
-    const select = document.getElementById("neighborhoodSelect");
-
-    // clear existing options (important if re-called)
-    select.innerHTML = "";
-
-    // Add "All" option at the top
+function populateDropdowns(airbnbData, crimeTypes) {
+    const neighborhoodSelect = document.getElementById("neighborhoodSelect");
+    neighborhoodSelect.innerHTML = "";
+    
     const allOption = document.createElement("option");
     allOption.value = "All";
     allOption.textContent = "All Neighborhoods";
-    select.appendChild(allOption);
+    neighborhoodSelect.appendChild(allOption);
 
-    // Extract unique neighborhood names
     const neighborhoods = Array.from(
-    new Set(
-        airbnbData
-        .map(d => d.neighborhood_cleansed)
-        .filter(d => d && d.trim() !== "")
-    )
+        new Set(airbnbData.map(d => d.neighbourhood_cleansed).filter(d => d && d.trim() !== ""))
     ).sort();
-    console.log(neighborhoods)
-    // Populate dropdown
+
     neighborhoods.forEach(name => {
         const option = document.createElement("option");
         option.value = name;
         option.textContent = name;
-        select.appendChild(option);
-  });
+        neighborhoodSelect.appendChild(option);
+    });
+
+    const roomTypeSelect = document.getElementById("roomTypeSelect");
+    roomTypeSelect.innerHTML = "";
+    
+    const allRoomOption = document.createElement("option");
+    allRoomOption.value = "All";
+    allRoomOption.textContent = "All Room Types";
+    roomTypeSelect.appendChild(allRoomOption);
+
+    const roomTypes = Array.from(
+        new Set(airbnbData.map(d => d.room_type).filter(d => d && d.trim() !== ""))
+    ).sort();
+
+    roomTypes.forEach(type => {
+        const option = document.createElement("option");
+        option.value = type;
+        option.textContent = type;
+        roomTypeSelect.appendChild(option);
+    });
+
+    const crimeTypeContainer = document.getElementById("crimeTypeFilters");
+    if (crimeTypeContainer) {
+        crimeTypeContainer.innerHTML = "";
+        
+        // Airbnb toggle
+        const airbnbToggle = document.createElement("label");
+        airbnbToggle.className = "toggle-label airbnb-toggle";
+        const airbnbSwitch = document.createElement("input");
+        airbnbSwitch.type = "checkbox";
+        airbnbSwitch.checked = state.global.showAirbnb;
+        airbnbSwitch.addEventListener("change", (e) => {
+            state.global.showAirbnb = e.target.checked;
+            if (mapInstance) {
+                const filteredAirbnb = applyFilters(globalData);
+                mapInstance.setAirbnbVisibility(state.global.showAirbnb, filteredAirbnb);
+            }
+        });
+        const airbnbSlider = document.createElement("span");
+        airbnbSlider.className = "slider";
+        airbnbToggle.appendChild(airbnbSwitch);
+        airbnbToggle.appendChild(airbnbSlider);
+        airbnbToggle.appendChild(document.createTextNode(" Airbnb"));
+        crimeTypeContainer.appendChild(airbnbToggle);
+        
+        // All Crimes toggle
+        const allCrimesToggle = document.createElement("label");
+        allCrimesToggle.className = "toggle-label all-crimes-toggle";
+        const allCrimesSwitch = document.createElement("input");
+        allCrimesSwitch.type = "checkbox";
+        allCrimesSwitch.checked = true;
+        allCrimesSwitch.addEventListener("change", (e) => {
+            const crimeCheckboxes = crimeTypeContainer.querySelectorAll(".crime-type-toggle input");
+            crimeCheckboxes.forEach(cb => {
+                cb.checked = e.target.checked;
+                const type = cb.dataset.crimeType;
+                if (e.target.checked) {
+                    state.global.selectedCrimeTypes.add(type);
+                } else {
+                    state.global.selectedCrimeTypes.delete(type);
+                }
+            });
+            if (mapInstance) {
+                mapInstance.updateCrimePoints(globalData.crimeRaw, state.global.selectedCrimeTypes);
+            }
+        });
+        const allCrimesSlider = document.createElement("span");
+        allCrimesSlider.className = "slider";
+        allCrimesToggle.appendChild(allCrimesSwitch);
+        allCrimesToggle.appendChild(allCrimesSlider);
+        allCrimesToggle.appendChild(document.createTextNode(" All Crimes"));
+        crimeTypeContainer.appendChild(allCrimesToggle);
+        
+        // Crime type toggles
+        if (crimeTypes.length > 0) {
+            crimeTypes.forEach(type => {
+                state.global.selectedCrimeTypes.add(type);
+                const label = document.createElement("label");
+                label.className = "toggle-label crime-type-toggle";
+                const checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.checked = true;
+                checkbox.dataset.crimeType = type;
+                checkbox.addEventListener("change", (e) => {
+                    if (e.target.checked) {
+                        state.global.selectedCrimeTypes.add(type);
+                    } else {
+                        state.global.selectedCrimeTypes.delete(type);
+                    }
+                    if (mapInstance) {
+                        mapInstance.updateCrimePoints(globalData.crimeRaw, state.global.selectedCrimeTypes);
+                    }
+                });
+                const slider = document.createElement("span");
+                slider.className = "slider";
+                slider.style.setProperty('--toggle-color', crimeTypeColors[type] || crimeTypeColors['OTHER']);
+                label.appendChild(checkbox);
+                label.appendChild(slider);
+                label.appendChild(document.createTextNode(" " + type));
+                crimeTypeContainer.appendChild(label);
+            });
+        }
+    }
 }
 
+function applyFilters(data) {
+    let filtered = data.airbnb;
 
-// ======================================================
-// Global filters
-// ======================================================
-
-function applyGlobalFilters(data) { 
-    if (state.global.neighborhood === "All") { 
-        return data; 
-    } 
-    console.log("filter mode")
-    console.log(data.airbnb)
-    return { 
-        airbnb: data.airbnb.filter(
-            d => d.neighborhood_cleansed === state.global.neighborhood)
-    /*, 
-    crime: data.crime.filter(d => d3.geoContains(neighborhoodFeature, [d.longitude, d.latitude]) 
-    ), 
-    geo: { ...data.geo, features: [neighborhoodFeature] } */
-    }; 
-}
-
-// ======================================================
-// RENDER FUNCTIONS
-// ======================================================
-
-// Treemap
-function renderTreemap(airbnbData) { 
-    const { level1, level2, level3 } = state.local.treemap; 
-    const root = buildHierarchyTree(airbnbData, level1, level2, level3); 
-    plotTreeMap(root, width, height, svg_treemap); 
-}
-/*
-// Crimemap
-function renderCrimeMap(crimeData) {
-
-;
-}
-
-// Histogram
-function renderHistogram(airbnbData) {
-
-;
-}
-
-// Scatterplot
-function renderScatter(airbnbData) {
-
-;
-}
-*/
-
-// ======================================================
-// CENTRAL RENDER FUNCTION
-// ======================================================
-
-function renderAll() { 
-    // get the filtered data!
-    const filtered = applyGlobalFilters(globalData); 
-    console.log("hi")
-    console.log(filtered);
-    // Render the plots
-    renderTreemap(filtered.airbnb); 
-    //renderCrimeMap(filtered.crime, filtered.geo); // placeholder 
-    //renderHistogram(filtered.airbnb); // placeholder
-    //renderScatter(filtered.airbnb, filtered.crime); // placeholder 
-}
-
-// ======================================================
-// EVENT LISTENERS
-// ======================================================
-
-function setupEventListeners() { 
-    // Global neighborhood dropdown 
-    document
-        .getElementById("neighborhoodSelect")
-        .addEventListener("change", e => { 
-            state.global.neighborhood = e.target.value; 
-            renderAll(); }); 
-            
-        // Treemap local controls 
-        ["level1", "level2", "level3"].forEach(id => { 
-            document.getElementById(id).addEventListener("change", e => {
-                state.local.treemap[id] = e.target.value; 
-                renderAll(); 
-            }); 
-        }); 
+    if (state.global.neighborhood !== "All") {
+        filtered = filtered.filter(d => d.neighbourhood_cleansed === state.global.neighborhood);
     }
 
-// ======================================================
-// DATA LOAD and RENDER call
-// ======================================================
+    if (state.global.roomType !== "All") {
+        filtered = filtered.filter(d => d.room_type === state.global.roomType);
+    }
 
+    if (state.global.brushBounds) {
+        const b = state.global.brushBounds;
+        filtered = filtered.filter(d => 
+            d.longitude >= b.minLng && d.longitude <= b.maxLng &&
+            d.latitude >= b.minLat && d.latitude <= b.maxLat
+        );
+    }
 
-// Promise.all([...]): Loads multiple files in parallel. Waits until all are finished and only then runs .then(...)
+    return filtered;
+}
+
+function applyHistogramFilter(data) {
+    if (!state.local.crossFilter.treemapFeature) return data;
+    
+    const f = state.local.crossFilter.treemapFeature;
+    return data.filter(d => 
+        d[f.level1] === f.l1 && 
+        d[f.level2] === f.l2 && 
+        d[f.level3] === f.l3
+    );
+}
+
+function applyTreemapFilter(data) {
+    if (!state.local.crossFilter.priceBounds) return data;
+    
+    const b = state.local.crossFilter.priceBounds;
+    return data.filter(d => d.price >= b.min && d.price < b.max);
+}
+
+function updateFilterStatus(filteredCount, totalCount) {
+    const statusEl = document.getElementById("filterStatus");
+    if (statusEl) {
+        statusEl.textContent = `Showing ${filteredCount} of ${totalCount} listings`;
+    }
+}
+
+function renderAll() {
+    const filteredAirbnb = applyFilters(globalData);
+    
+    updateFilterStatus(filteredAirbnb.length, globalData.airbnb.length);
+
+    if (mapInstance) {
+        mapInstance.updatePoints(filteredAirbnb);
+    }
+
+    createScatter("#scatter", filteredAirbnb, globalData.crime, (neighborhood) => {
+        state.global.neighborhood = neighborhood;
+        document.getElementById("neighborhoodSelect").value = neighborhood;
+        renderAll();
+    });
+
+    const histogramData = applyHistogramFilter(filteredAirbnb);
+    createHistogram("#histogram", histogramData, state.global.neighborhood, onHistogramBarClick, state.local.crossFilter.priceBucket);
+
+    const treemapData = applyTreemapFilter(filteredAirbnb);
+    const { level1, level2, level3 } = state.local.treemap;
+    createTreemap("#treemap", treemapData, level1, level2, level3, onTreemapCellClick, state.local.crossFilter.treemapFeature);
+}
+
+function onHistogramBarClick(category, bounds) {
+    if (state.local.crossFilter.priceBucket === category) {
+        state.local.crossFilter.priceBucket = null;
+        state.local.crossFilter.priceBounds = null;
+    } else {
+        state.local.crossFilter.priceBucket = category;
+        state.local.crossFilter.priceBounds = bounds;
+    }
+    renderAll();
+}
+
+function onTreemapCellClick(feature) {
+    const current = state.local.crossFilter.treemapFeature;
+    if (current && current.l1 === feature.l1 && current.l2 === feature.l2 && current.l3 === feature.l3) {
+        state.local.crossFilter.treemapFeature = null;
+    } else {
+        state.local.crossFilter.treemapFeature = feature;
+    }
+    renderAll();
+}
+
+function onMapBrush(bounds) {
+    state.global.brushBounds = bounds;
+    renderAll();
+}
+
+function setupEventListeners() {
+    document.getElementById("neighborhoodSelect").addEventListener("change", e => {
+        state.global.neighborhood = e.target.value;
+        renderAll();
+    });
+
+    document.getElementById("roomTypeSelect").addEventListener("change", e => {
+        state.global.roomType = e.target.value;
+        renderAll();
+    });
+
+    document.getElementById("clearFilters").addEventListener("click", () => {
+        state.global.neighborhood = "All";
+        state.global.roomType = "All";
+        state.global.brushBounds = null;
+        state.local.crossFilter.priceBucket = null;
+        state.local.crossFilter.priceBounds = null;
+        state.local.crossFilter.treemapFeature = null;
+        document.getElementById("neighborhoodSelect").value = "All";
+        document.getElementById("roomTypeSelect").value = "All";
+        d3.select("#map .brush").call(d3.brush().move, null);
+        renderAll();
+    });
+
+    ["level1", "level2", "level3"].forEach(id => {
+        document.getElementById(id).addEventListener("change", e => {
+            state.local.treemap[id] = e.target.value;
+            state.local.crossFilter.treemapFeature = null;
+            renderAll();
+        });
+    });
+}
+
 Promise.all([
     d3.csv("data/airbnb_data.csv", d => ({
-        // We have to adapt the data types as all are strings!
-        // + in front of the loaded row (here d) means "convert to number"
         latitude: +d.latitude,
         longitude: +d.longitude,
-        neighborhood_cleansed: d.neighbourhood_cleansed,
+        neighbourhood_cleansed: d.neighbourhood_cleansed,
         property_type: d.property_type,
         room_type: d.room_type,
         review_scores_rating: +d.review_scores_rating,
@@ -181,19 +299,31 @@ Promise.all([
         beds: +d.beds,
         price: +d.price,
         rating_bucket: d.rating_bucket
-    }))
-    //,
-/*  d3.csv("crime.csv", d => ({
-       latitude: +d.latitude,
-        longitude: +d.longitude,
-        primary_type: d.primary_type
     })),
-    d3.json("neighborhoods.geojson")*/
-]).then(([airbnb]) => {//, crime, geo]) => {
-    globalData = { airbnb };//, crime, geo };
-    console.log(airbnb)
-    populateNeighborhoodDropdown(airbnb); 
-    //console.log(neighborhoods)
+    d3.csv("data/crime_aggregated.csv", d => ({
+        neighbourhood_cleansed: d.neighbourhood_cleansed,
+        crime_count: +d.crime_count
+    })),
+    d3.json("data/chicago_neighborhoods.geojson"),
+    d3.csv("data/crime_filtered.csv", d => ({
+        id: d.ID,
+        latitude: +d.latitude,
+        longitude: +d.longitude,
+        primary_type: d["Primary Type"],
+        description: d.Description,
+        date: d.Date
+    }))
+]).then(([airbnb, crime, geo, crimeRaw]) => {
+    const validCrimeRaw = crimeRaw.filter(d => d.latitude && d.longitude && !isNaN(d.latitude) && !isNaN(d.longitude));
+    const crimeTypes = Array.from(new Set(validCrimeRaw.map(d => d.primary_type))).filter(t => t).sort();
+    
+    globalData = { airbnb, crime, geo, crimeRaw: validCrimeRaw };
+
+    populateDropdowns(airbnb, crimeTypes);
     setupEventListeners();
+
+    mapInstance = createMap("#map", geo, airbnb, validCrimeRaw, onMapBrush, state.global.selectedCrimeTypes);
     renderAll();
+}).catch(err => {
+    console.error("Error loading data:", err);
 });
