@@ -284,7 +284,7 @@ function setupEventListeners() {
         state.local.crossFilter.treemapFeature = null;
         document.getElementById("neighborhoodSelect").value = "All";
         document.getElementById("roomTypeSelect").value = "All";
-        d3.select("#map .brush").call(d3.brush().move, null);
+        mapInstance?.clearBrush();
         renderAll();
     });
 

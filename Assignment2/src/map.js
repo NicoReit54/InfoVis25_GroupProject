@@ -61,13 +61,15 @@ function createMap(container, geoData, airbnbData, crimeData, onBrushEnd, select
     const width = 400;
     const height = 350;
     
-    d3.select(container).selectAll("*").remove();
-    
-    const svg = d3.select(container)
-        .append("svg")
-        .attr("viewBox", [0, 0, width, height])
-        .attr("width", "100%")
-        .attr("height", "100%");
+    let svg = d3.select(container).select("svg");
+
+    if (svg.empty()) {
+        svg = d3.select(container)
+            .append("svg")
+            .attr("viewBox", [0, 0, width, height])
+            .attr("width", "100%")
+            .attr("height", "100%");
+    }
 
     const g = svg.append("g");
     
@@ -182,28 +184,46 @@ function createMap(container, geoData, airbnbData, crimeData, onBrushEnd, select
         updateCrimePoints(crimeData, selectedCrimeTypes);
     }
 
+    function brushed(event) {
+        if (!event.selection) {
+            onBrushEnd(null);
+            return;
+        }
+
+        const [[x0, y0], [x1, y1]] = event.selection;
+        const bounds = {
+            minLng: projection.invert([x0, y0])[0],
+            maxLng: projection.invert([x1, y0])[0],
+            minLat: projection.invert([x0, y1])[1],
+            maxLat: projection.invert([x0, y0])[1]
+        };
+        onBrushEnd(bounds);
+    }
+
     const brush = d3.brush()
         .extent([[0, 0], [width, height]])
-        .on("end", function(event) {
-            if (!event.selection) {
-                onBrushEnd(null);
-                return;
-            }
-            const [[x0, y0], [x1, y1]] = event.selection;
-            const bounds = {
-                minLng: projection.invert([x0, y0])[0],
-                maxLng: projection.invert([x1, y0])[0],
-                minLat: projection.invert([x0, y1])[1],
-                maxLat: projection.invert([x0, y0])[1]
-            };
-            onBrushEnd(bounds);
+        .on("start", () => {
+            svg.on(".zoom", null);   // disable zoom
+        })
+        .on("brush end", brushed)
+        .on("end", () => {
+            svg.call(zoom);          // re-enable zoom
+            svg.on("mousedown.zoom", null); 
+            svg.on("touchstart.zoom", null);
         });
 
-    svg.append("g")
-        .attr("class", "brush")
+
+    const brushGroup = svg.select(".brush").empty()
+        ? svg.append("g").attr("class", "brush")
+        : svg.select(".brush");
+    
+    brushGroup
+        .style("pointer-events", "all")
+        .style("cursor", "crosshair")
         .call(brush);
 
-    return { updatePoints, updateCrimePoints, setAirbnbVisibility };
+
+    return { updatePoints, updateCrimePoints, setAirbnbVisibility, clearBrush: () => brushGroup.call(brush.move, null) };
 }
 
 export { createMap, districtMap, districtColors, crimeTypeColors };
