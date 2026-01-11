@@ -71,7 +71,12 @@ function createMap(container, geoData, airbnbData, crimeData, onBrushEnd, select
             .attr("height", "100%");
     }
 
-    const g = svg.append("g");
+    // only render when its not there 
+    let g = svg.select("g.map-layer");
+
+    if (g.empty()) {
+        g = svg.append("g").attr("class", "map-layer");
+    }
     
     let airbnbVisible = showAirbnb;
 
@@ -86,17 +91,27 @@ function createMap(container, geoData, airbnbData, crimeData, onBrushEnd, select
 
     svg.call(zoom);
 
-    g.selectAll("path")
-        .data(geoData.features)
-        .enter()
-        .append("path")
-        .attr("d", path)
-        .attr("fill", "#eee")
-        .attr("stroke", "#ccc")
-        .attr("stroke-width", 0.5);
+    // only render the map once 
+    if (g.selectAll("path").empty()) {
+        g.selectAll("path")
+            .data(geoData.features)
+            .enter()
+            .append("path")
+            .attr("d", path)
+            .attr("fill", "#eee")
+            .attr("stroke", "#ccc")
+            .attr("stroke-width", 0.5);
+    }
 
-    const crimeGroup = g.append("g").attr("class", "crimes");
-    const pointsGroup = g.append("g").attr("class", "points");
+    let crimeGroup = g.select("g.crimes");
+    if (crimeGroup.empty()) {
+        crimeGroup = g.append("g").attr("class", "crimes");
+    }
+
+    let pointsGroup = g.select("g.points");
+    if (pointsGroup.empty()) {
+        pointsGroup = g.append("g").attr("class", "points");
+    }
 
     const tooltip = d3.select("body").select(".tooltip").empty()
         ? d3.select("body").append("div").attr("class", "tooltip")
@@ -203,14 +218,13 @@ function createMap(container, geoData, airbnbData, crimeData, onBrushEnd, select
     const brush = d3.brush()
         .extent([[0, 0], [width, height]])
         .on("start", () => {
-            svg.on(".zoom", null);   // disable zoom
+            svg.on(".zoom", null);
         })
-        .on("brush end", brushed)
-        .on("end", () => {
-            svg.call(zoom);          // re-enable zoom
-            svg.on("mousedown.zoom", null); 
-            svg.on("touchstart.zoom", null);
-        });
+        .on("brush", () => {
+            // intentionally empty: no work here so it is faster
+        })
+        .on("end", brushed);
+
 
 
     const brushGroup = svg.select(".brush").empty()
