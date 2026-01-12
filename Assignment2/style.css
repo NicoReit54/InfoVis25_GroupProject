@@ -234,3 +234,10 @@ svg {
   border-radius: 50%;
   display: inline-block;
 }
+
+.y-grid line {
+  shape-rendering: crispEdges;
+  vector-effect: non-scaling-stroke;
+  stroke-width: 1;
+  stroke-opacity: 0.25;
+}

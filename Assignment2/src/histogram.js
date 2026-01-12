@@ -31,9 +31,9 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
     bins.push({ x0: upperLimit, x1: Infinity, length: overflowCount });
 
     const categories = bins.map(d => {
-        if (!isFinite(d.x1)) return `>${upperLimit}`;
-        if (d.x1 === upperLimit) return `${d.x0}-${d.x1}`;
-        return `${d.x0}-${d.x1 - 1}`;
+        if (!isFinite(d.x1)) return `>${upperLimit} $`;
+        if (d.x1 === upperLimit) return `${d.x0}-${d.x1} $`;
+        return `${d.x0}-${d.x1 - 1} $`;
     });
 
     const x = d3.scaleBand()
@@ -55,6 +55,28 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
 
     svg.append("g")
         .call(d3.axisLeft(y).ticks(5));
+
+    // --- Gridlines (Y) ---
+    const maxTicks = 5; // du nutzt sowieso .ticks(5) für die y-Achse
+
+    const yGridG = svg.append("g")
+    .attr("class", "y-grid");
+
+    yGridG.call(
+    d3.axisLeft(y)
+        .ticks(maxTicks)
+        .tickSize(-width)     // <- wichtig: Grid über gesamte Plotbreite
+        .tickFormat("")       // <- keine Labels im Grid
+    );
+
+    // optional: Grid "cleaner" machen (wie bei dir)
+    yGridG.selectAll(".tick")
+    .filter(d => d === 0)
+    .select("line")
+    .remove();
+
+    yGridG.select(".domain").remove();
+
 
     const title = selectedNeighborhood && selectedNeighborhood !== "All" 
         ? `Price ($) - ${selectedNeighborhood}` 
@@ -102,7 +124,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
         .attr("cursor", "pointer")
         .on("mouseover", function(event, d) {
             d3.select(this).attr("fill", "#2171b5");
-            const label = !isFinite(d.x1) ? `>${upperLimit}` : `${d.x0}-${d.x1 - 1}`;
+            const label = !isFinite(d.x1) ? `>${upperLimit} $` : `${d.x0}-${d.x1 - 1} $`;
             tooltip.style("opacity", 1)
                 .html(`${label}: ${d.length} listings<br><em>Click to filter treemap</em>`)
                 .style("left", (event.pageX + 10) + "px")
