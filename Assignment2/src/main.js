@@ -206,6 +206,12 @@ function updateFilterStatus(filteredCount, totalCount) {
     }
 }
 
+function resetCrossFilters() {
+    state.local.crossFilter.priceBucket = null;
+    state.local.crossFilter.priceBounds = null;
+    state.local.crossFilter.treemapFeature = null;
+}
+
 function renderAll() {
     const filteredAirbnb = applyFilters(globalData);
     
@@ -218,6 +224,7 @@ function renderAll() {
     createScatter("#scatter", filteredAirbnb, globalData.crime, (neighborhood) => {
         state.global.neighborhood = neighborhood;
         document.getElementById("neighborhoodSelect").value = neighborhood;
+        resetCrossFilters(); 
         renderAll();
     });
 
@@ -232,6 +239,7 @@ function renderAll() {
     createCrimeBar("#crimeBar", globalData.crime, filteredAirbnb, (neighborhood) => {
         state.global.neighborhood = neighborhood;
         document.getElementById("neighborhoodSelect").value = neighborhood;
+        resetCrossFilters(); 
         renderAll();
     });
 
@@ -267,11 +275,13 @@ function onMapBrush(bounds) {
 function setupEventListeners() {
     document.getElementById("neighborhoodSelect").addEventListener("change", e => {
         state.global.neighborhood = e.target.value;
+        resetCrossFilters(); 
         renderAll();
     });
 
     document.getElementById("roomTypeSelect").addEventListener("change", e => {
         state.global.roomType = e.target.value;
+        resetCrossFilters(); 
         renderAll();
     });
 
