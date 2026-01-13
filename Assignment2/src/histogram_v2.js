@@ -12,7 +12,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
     ? d3.select("body").append("div").attr("class", "tooltip")
     : d3.select("body").select(".tooltip");
 
-  // --- Binning (wie bei dir) ---
+  // --- Binning  ---
   const bin = d3.bin()
     .domain([lowerLimit, upperLimit])
     .thresholds(d3.range(lowerLimit, upperLimit, binWidth));
@@ -22,7 +22,6 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
   const overflowCount = airbnbData.filter(d => d.price > upperLimit).length;
   bins.push({ x0: upperLimit, x1: Infinity, length: overflowCount });
 
-  // Kategorien sind stabil (fixe Bins)
   const categories = bins.map(d => {
     if (!isFinite(d.x1)) return `>${upperLimit} $`;
     if (d.x1 === upperLimit) return `${d.x0}-${d.x1} $`;
@@ -64,7 +63,6 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
     g.append("g").attr("class", "y-axis");
     g.append("g").attr("class", "bars");
 
-    // Labels einmalig anlegen
     g.append("text")
       .attr("class", "x-title")
       .attr("x", width / 2)
@@ -88,7 +86,6 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
   const yGridG = g.select("g.y-grid");
   const barsG = g.select("g.bars");
 
-  // Transition: beim ersten Render gerne sichtbar, später dezent
   const t = d3.transition().duration(500);
 
   // --- Axes ---
@@ -103,7 +100,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
     .transition(t)
     .call(d3.axisLeft(y).ticks(maxTicks));
 
-  // --- Gridlines (re-use: keine doppelten Linien) ---
+  // --- Gridlines (re-use) ---
   yGridG
     .transition(t)
     .call(
@@ -113,7 +110,6 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
         .tickFormat("")
     );
 
-  // Grid "clean"
   yGridG.selectAll(".tick")
     .filter(d => d === 0)
     .select("line")
@@ -121,7 +117,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
 
   yGridG.select(".domain").remove();
 
-  // Bars vor Grid (damit Grid nicht durch Bars „durchscheint“)
+  // Bars on grid lines
   barsG.raise();
 
   // --- Titles update ---
@@ -131,7 +127,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
 
   g.select("text.x-title").text(title);
 
-  // --- Bars: join(enter/update/exit); Enter animiert von 0, Update nur alt->neu ---
+  // --- Bars: join(enter/update/exit) ---
   const barSel = barsG.selectAll("rect.bar")
     .data(bins, d => d.x0); // stabiler Key pro Bin
 
@@ -144,7 +140,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
     .attr("height", 0)
     .attr("cursor", "pointer");
 
-  // enter animation nur beim erstmaligen Erscheinen
+  // enter 
   enter
     .attr("fill", (d, i) => {
       const cat = categories[i];
@@ -159,7 +155,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
       .attr("y", d => y(d.length))
       .attr("height", d => height - y(d.length));
 
-  // update: NICHT von 0 starten, sondern smooth von aktuellem Zustand zum neuen
+  // update
   barSel
     .attr("fill", (d, i) => {
       const cat = categories[i];
@@ -176,14 +172,14 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
       .attr("y", d => y(d.length))
       .attr("height", d => height - y(d.length));
 
-  // exit (praktisch nie, weil gleiche bins), aber sauber
+  // exit 
   barSel.exit()
     .transition(t)
       .attr("y", height)
       .attr("height", 0)
       .remove();
 
-  // --- Events: auf Enter+Update binden (ohne Transition-Kette!) ---
+  // --- Events ---
   const mergedBars = barsG.selectAll("rect.bar");
 
   mergedBars
