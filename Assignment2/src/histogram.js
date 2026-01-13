@@ -3,6 +3,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
     const width = 400 - margin.left - margin.right;
     const height = 300 - margin.top - margin.bottom;
 
+    // excluded for animations
     d3.select(container).selectAll("*").remove();
 
     const svg = d3.select(container)
@@ -97,6 +98,9 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
         .attr("font-size", "11px")
         .text("Count");
 
+    const t = d3.transition().duration(500);
+    
+    // Original! 
     svg.selectAll(".bar")
         .data(bins)
         .enter()
@@ -122,30 +126,30 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
         })
         .attr("stroke-width", 2)
         .attr("cursor", "pointer")
-        .on("mouseover", function(event, d) {
-            d3.select(this).attr("fill", "#2171b5");
-            const label = !isFinite(d.x1) ? `>${upperLimit} $` : `${d.x0}-${d.x1 - 1} $`;
-            tooltip.style("opacity", 1)
-                .html(`${label}: ${d.length} listings<br><em>Click to filter treemap</em>`)
-                .style("left", (event.pageX + 10) + "px")
-                .style("top", (event.pageY - 10) + "px");
-        })
-        .on("mouseout", function(event, d) {
-            const i = bins.indexOf(d);
-            const cat = categories[i];
-            if (!selectedPriceBucket || selectedPriceBucket !== cat) {
-                d3.select(this).attr("fill", "steelblue");
-            }
-            tooltip.style("opacity", 0);
-        })
-        .on("click", function(event, d) {
-            const i = bins.indexOf(d);
-            const cat = categories[i];
-            const bounds = { min: d.x0, max: isFinite(d.x1) ? d.x1 : Infinity };
-            if (onBarClick) {
-                onBarClick(cat, bounds);
-            }
-        });
+    .on("mouseover", function(event, d) {
+        d3.select(this).attr("fill", "#2171b5");
+        const label = !isFinite(d.x1) ? `>${upperLimit} $` : `${d.x0}-${d.x1 - 1} $`;
+        tooltip.style("opacity", 1)
+            .html(`${label}: ${d.length} listings<br><em>Click to filter treemap</em>`)
+            .style("left", (event.pageX + 10) + "px")
+            .style("top", (event.pageY - 10) + "px");
+    })
+    .on("mouseout", function(event, d) {
+        const i = bins.indexOf(d);
+        const cat = categories[i];
+        if (!selectedPriceBucket || selectedPriceBucket !== cat) {
+            d3.select(this).attr("fill", "steelblue");
+        }
+        tooltip.style("opacity", 0);
+    })
+    .on("click", function(event, d) {
+        const i = bins.indexOf(d);
+        const cat = categories[i];
+        const bounds = { min: d.x0, max: isFinite(d.x1) ? d.x1 : Infinity };
+        if (onBarClick) {
+            onBarClick(cat, bounds);
+        }
+    });
 }
 
 export { createHistogram };

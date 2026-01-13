@@ -1,6 +1,6 @@
 import { createMap, crimeTypeColors } from "./map.js";
 import { createScatter } from "./scatter.js";
-import { createHistogram } from "./histogram.js";
+import { createHistogram } from "./histogram_v2.js";
 import { createTreemap } from "./treemap.js";
 import { createCrimeBar } from "./crimeBar.js";
 import { createPriceByRoom } from "./priceByRoom.js";
