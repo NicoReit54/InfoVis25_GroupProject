@@ -247,6 +247,7 @@ function renderAll() {
 }
 
 function onHistogramBarClick(category, bounds) {
+    state.local.crossFilter.treemapFeature = null;
     if (state.local.crossFilter.priceBucket === category) {
         state.local.crossFilter.priceBucket = null;
         state.local.crossFilter.priceBounds = null;
@@ -263,6 +264,9 @@ function onTreemapCellClick(feature) {
         state.local.crossFilter.treemapFeature = null;
     } else {
         state.local.crossFilter.treemapFeature = feature;
+
+        state.local.crossFilter.priceBucket = null;
+        state.local.crossFilter.priceBounds = null;
     }
     renderAll();
 }

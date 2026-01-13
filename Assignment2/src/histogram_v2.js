@@ -79,7 +79,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
       .attr("x", -height / 2)
       .attr("text-anchor", "middle")
       .attr("font-size", "11px")
-      .text("Count");
+      .text("Listing Count");
   }
 
   const g = svgRoot.select("g.plot");
