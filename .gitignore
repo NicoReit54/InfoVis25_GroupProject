@@ -3,6 +3,12 @@ __pycache__/
 *.py[codz]
 *$py.class
 
+Assignment2/ahnaf
+Assignment2/hasan
+Assignment2/markus
+Assignment2/nico
+
+
 # C extensions
 *.so
 
