@@ -1,6 +1,6 @@
-// Average Price by Room Type Bar Chart
-function createPriceByRoom(container, airbnbData, selectedNeighborhood) {
-    const margin = { top: 20, right: 20, bottom: 60, left: 60 };
+// Price Distribution Boxplot by Room Type
+function createPriceByRoom(container, airbnbData, selectedNeighborhood, onBoxClick, selectedRoomType) {
+    const margin = { top: 10, right: 20, bottom: 60, left: 60 };
     const width = 400 - margin.left - margin.right;
     const height = 300 - margin.top - margin.bottom;
 
@@ -28,26 +28,42 @@ function createPriceByRoom(container, airbnbData, selectedNeighborhood) {
         return;
     }
 
-    // Aggregate by room type
+    // Aggregate by room type with boxplot statistics
     const roomStats = d3.rollup(
         airbnbData,
-        v => ({
-            avgPrice: d3.mean(v, d => d.price),
-            avgRating: d3.mean(v, d => d.review_scores_rating),
-            count: v.length,
-            medianPrice: d3.median(v, d => d.price)
-        }),
+        v => {
+            const prices = v.map(d => d.price).sort(d3.ascending);
+            const q1 = d3.quantile(prices, 0.25);
+            const median = d3.quantile(prices, 0.5);
+            const q3 = d3.quantile(prices, 0.75);
+            const iqr = q3 - q1;
+            const min = d3.min(prices);
+            const max = d3.max(prices);
+            
+            // Whiskers: 1.5 * IQR
+            const lowerWhisker = Math.max(min, q1 - 1.5 * iqr);
+            const upperWhisker = Math.min(max, q3 + 1.5 * iqr);
+            
+            return {
+                q1,
+                median,
+                q3,
+                min,
+                max,
+                lowerWhisker,
+                upperWhisker,
+                avgPrice: d3.mean(prices),
+                count: v.length
+            };
+        },
         d => d.room_type
     );
 
     const data = Array.from(roomStats, ([roomType, stats]) => ({
         roomType,
-        avgPrice: stats.avgPrice,
-        avgRating: stats.avgRating,
-        count: stats.count,
-        medianPrice: stats.medianPrice
-    })).filter(d => d.roomType && d.avgPrice > 0)
-      .sort((a, b) => b.avgPrice - a.avgPrice);
+        ...stats
+    })).filter(d => d.roomType)
+      .sort((a, b) => a.roomType.localeCompare(b.roomType));
 
     if (data.length === 0) {
         svg.append("text")
@@ -67,35 +83,27 @@ function createPriceByRoom(container, airbnbData, selectedNeighborhood) {
     const x = d3.scaleBand()
         .domain(data.map(d => d.roomType))
         .range([0, width])
-        .padding(0.3);
+        .padding(0.4);
 
+    // Y-axis based on actual whiskers, not outliers
+    const maxWhisker = d3.max(data, d => d.upperWhisker);
     const y = d3.scaleLinear()
-        .domain([0, d3.max(data, d => d.avgPrice) * 1.1]).nice()
+        .domain([0, maxWhisker * 1.1]).nice()
         .range([height, 0]);
 
+    // Axes
     svg.append("g")
         .attr("transform", `translate(0,${height})`)
         .call(d3.axisBottom(x))
         .selectAll("text")
-        .attr("transform", "rotate(-20)")
+        .attr("transform", "rotate(-30)")
         .style("text-anchor", "end")
-        .attr("font-size", "9px");
+        .attr("font-size", "9px")
+        .attr("dx", "-0.5em")
+        .attr("dy", "0.5em");
 
     svg.append("g")
         .call(d3.axisLeft(y).ticks(5).tickFormat(d => `$${d}`));
-
-    const title = selectedNeighborhood && selectedNeighborhood !== "All"
-        ? `Avg Price - ${selectedNeighborhood}`
-        : "Avg Price by Room Type";
-
-    svg.append("text")
-        .attr("class", "axis-label")
-        .attr("x", width / 2)
-        .attr("y", -5)
-        .attr("text-anchor", "middle")
-        .attr("font-size", "11px")
-        .attr("font-weight", "bold")
-        .text(title);
 
     svg.append("text")
         .attr("class", "axis-label")
@@ -104,48 +112,100 @@ function createPriceByRoom(container, airbnbData, selectedNeighborhood) {
         .attr("x", -height / 2)
         .attr("text-anchor", "middle")
         .attr("font-size", "10px")
-        .text("Average Price ($)");
+        .text("Price ($)");
 
-    // Bars
-    svg.selectAll(".bar")
+    const boxWidth = x.bandwidth();
+
+    // Draw boxplots
+    const boxGroups = svg.selectAll(".box-group")
         .data(data)
         .enter()
-        .append("rect")
-        .attr("class", "bar")
-        .attr("x", d => x(d.roomType))
-        .attr("width", x.bandwidth())
-        .attr("y", d => y(d.avgPrice))
-        .attr("height", d => height - y(d.avgPrice))
+        .append("g")
+        .attr("class", "box-group")
+        .attr("transform", d => `translate(${x(d.roomType)},0)`);
+
+    // Vertical lines (whiskers) - clip to visible range
+    boxGroups.append("line")
+        .attr("x1", boxWidth / 2)
+        .attr("x2", boxWidth / 2)
+        .attr("y1", d => Math.max(y(d.lowerWhisker), 0))
+        .attr("y2", d => y(d.q1))
+        .attr("stroke", "#333")
+        .attr("stroke-width", 1.5);
+
+    boxGroups.append("line")
+        .attr("x1", boxWidth / 2)
+        .attr("x2", boxWidth / 2)
+        .attr("y1", d => y(d.q3))
+        .attr("y2", d => Math.min(y(d.upperWhisker), height))
+        .attr("stroke", "#333")
+        .attr("stroke-width", 1.5);
+
+    // Lower whisker cap
+    boxGroups.append("line")
+        .attr("x1", boxWidth * 0.3)
+        .attr("x2", boxWidth * 0.7)
+        .attr("y1", d => Math.max(y(d.lowerWhisker), 0))
+        .attr("y2", d => Math.max(y(d.lowerWhisker), 0))
+        .attr("stroke", "#333")
+        .attr("stroke-width", 1.5);
+
+    // Upper whisker cap
+    boxGroups.append("line")
+        .attr("x1", boxWidth * 0.3)
+        .attr("x2", boxWidth * 0.7)
+        .attr("y1", d => Math.min(y(d.upperWhisker), height))
+        .attr("y2", d => Math.min(y(d.upperWhisker), height))
+        .attr("stroke", "#333")
+        .attr("stroke-width", 1.5);
+
+    // Box (Q1 to Q3)
+    boxGroups.append("rect")
+        .attr("x", boxWidth * 0.15)
+        .attr("width", boxWidth * 0.7)
+        .attr("y", d => y(d.q3))
+        .attr("height", d => y(d.q1) - y(d.q3))
         .attr("fill", d => colorScale(d.roomType))
-        .attr("rx", 3)
+        .attr("fill-opacity", d => selectedRoomType === d.roomType ? 1 : 0.7)
+        .attr("stroke", d => selectedRoomType === d.roomType ? "#000" : "#333")
+        .attr("stroke-width", d => selectedRoomType === d.roomType ? 2.5 : 1.5)
+        .attr("rx", 2)
+        .attr("cursor", "pointer")
         .on("mouseover", function(event, d) {
-            d3.select(this).attr("opacity", 0.8);
+            if (selectedRoomType !== d.roomType) {
+                d3.select(this).attr("fill-opacity", 0.9);
+            }
             tooltip.style("opacity", 1)
                 .html(`<strong>${d.roomType}</strong><br>
-                       Avg Price: $${d.avgPrice.toFixed(0)}<br>
-                       Median: $${d.medianPrice.toFixed(0)}<br>
+                       Median: ${d.median.toFixed(0)}<br>
+                       Average: ${d.avgPrice.toFixed(0)}<br>
+                       Min: ${d.min.toFixed(0)}<br>
+                       Max: ${d.max.toFixed(0)}<br>
                        Listings: ${d.count}<br>
-                       Avg Rating: ${d.avgRating?.toFixed(2) || 'N/A'}`)
+                       <em>Click to ${selectedRoomType === d.roomType ? 'deselect' : 'filter'}</em>`)
                 .style("left", (event.pageX + 10) + "px")
                 .style("top", (event.pageY - 10) + "px");
         })
-        .on("mouseout", function() {
-            d3.select(this).attr("opacity", 1);
+        .on("mouseout", function(event, d) {
+            if (selectedRoomType !== d.roomType) {
+                d3.select(this).attr("fill-opacity", 0.7);
+            }
             tooltip.style("opacity", 0);
+        })
+        .on("click", function(event, d) {
+            if (onBoxClick) {
+                onBoxClick(d.roomType);
+            }
         });
 
-    // Add value labels on bars
-    svg.selectAll(".value-label")
-        .data(data)
-        .enter()
-        .append("text")
-        .attr("class", "value-label")
-        .attr("x", d => x(d.roomType) + x.bandwidth() / 2)
-        .attr("y", d => y(d.avgPrice) - 5)
-        .attr("text-anchor", "middle")
-        .attr("font-size", "9px")
-        .attr("fill", "#333")
-        .text(d => `$${d.avgPrice.toFixed(0)}`);
+    // Median line
+    boxGroups.append("line")
+        .attr("x1", boxWidth * 0.15)
+        .attr("x2", boxWidth * 0.85)
+        .attr("y1", d => y(d.median))
+        .attr("y2", d => y(d.median))
+        .attr("stroke", "#333")
+        .attr("stroke-width", 2.5);
 }
 
 export { createPriceByRoom };

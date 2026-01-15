@@ -3,16 +3,33 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
   const width = 400 - margin.left - margin.right;
   const height = 300 - margin.top - margin.bottom;
 
+  if (!airbnbData || airbnbData.length === 0) {
+    const sel = d3.select(container);
+    sel.selectAll("*").remove(); 
+
+    sel.append("svg")
+      .attr("width", "100%")
+      .attr("height", "100%")
+      .append("text")
+      .attr("x", "50%")
+      .attr("y", "50%")
+      .attr("text-anchor", "middle")
+      .attr("fill", "#666")
+      .attr("font-size", "14px")
+      .text("No Data");
+    return; // WICHTIG: Hier aufhören!
+  }
+
   const lowerLimit = 0;
   const upperLimit = 500;
   const binWidth = 50;
 
-  // --- Tooltip (re-use) ---
+  //  Tooltip 
   const tooltip = d3.select("body").select(".tooltip").empty()
     ? d3.select("body").append("div").attr("class", "tooltip")
     : d3.select("body").select(".tooltip");
 
-  // --- Binning  ---
+  //  Binning  
   const bin = d3.bin()
     .domain([lowerLimit, upperLimit])
     .thresholds(d3.range(lowerLimit, upperLimit, binWidth));
@@ -28,7 +45,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
     return `${d.x0}-${d.x1 - 1} $`;
   });
 
-  // --- Scales ---
+  //  Scales 
   const x = d3.scaleBand()
     .domain(categories)
     .range([0, width])
@@ -41,8 +58,12 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
 
   const maxTicks = 5;
 
-  // --- Create SVG once, then update ---
+  //  SVG Setup  
   const root = d3.select(container);
+  
+  if (!root.select("text").empty() && root.select("g.plot").empty()) {
+      root.selectAll("*").remove();
+  }
 
   let svgRoot = root.select("svg.histogram");
   const isFirstRender = svgRoot.empty();
@@ -88,7 +109,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
 
   const t = d3.transition().duration(500);
 
-  // --- Axes ---
+  //  Axes 
   xAxisG
     .call(d3.axisBottom(x))
     .selectAll("text")
@@ -100,7 +121,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
     .transition(t)
     .call(d3.axisLeft(y).ticks(maxTicks));
 
-  // --- Gridlines (re-use) ---
+  // Gridlines
   yGridG
     .transition(t)
     .call(
@@ -116,21 +137,24 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
     .remove();
 
   yGridG.select(".domain").remove();
-
+  
   // Bars on grid lines
   barsG.raise();
 
-  // --- Titles update ---
-  const title = selectedNeighborhood && selectedNeighborhood !== "All"
+  // Title Update 
+  const title = selectedNeighborhood && selectedNeighborhood !== "All" && selectedNeighborhood !== "Multiple"
     ? `Price ($) - ${selectedNeighborhood}`
+    : selectedNeighborhood === "Multiple"
+    ? "Price ($) - Multiple Neighborhoods"
     : "Price ($) - All";
 
   g.select("text.x-title").text(title);
 
-  // --- Bars: join(enter/update/exit) ---
+  //  Bars (Enter/Update/Exit) 
   const barSel = barsG.selectAll("rect.bar")
-    .data(bins, d => d.x0); // stabiler Key pro Bin
+    .data(bins, d => d.x0);
 
+  // Enter
   const enter = barSel.enter()
     .append("rect")
     .attr("class", "bar")
@@ -140,7 +164,6 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
     .attr("height", 0)
     .attr("cursor", "pointer");
 
-  // enter 
   enter
     .attr("fill", (d, i) => {
       const cat = categories[i];
@@ -155,7 +178,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
       .attr("y", d => y(d.length))
       .attr("height", d => height - y(d.length));
 
-  // update
+  // Update
   barSel
     .attr("fill", (d, i) => {
       const cat = categories[i];
@@ -172,14 +195,14 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
       .attr("y", d => y(d.length))
       .attr("height", d => height - y(d.length));
 
-  // exit 
+  // Exit
   barSel.exit()
     .transition(t)
       .attr("y", height)
       .attr("height", 0)
       .remove();
 
-  // --- Events ---
+  //  Events 
   const mergedBars = barsG.selectAll("rect.bar");
 
   mergedBars
@@ -192,7 +215,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
       else label = `${d.x0}-${d.x1 - 1} $`;
 
       tooltip.style("opacity", 1)
-        .html(`${label}: ${d.length} listings<br><em>Click to filter treemap</em>`)
+        .html(`${label}: ${d.length} listings<br><em>${event.ctrlKey ? 'Ctrl+' : ''}Click to filter treemap</em>`)
         .style("left", (event.pageX + 10) + "px")
         .style("top", (event.pageY - 10) + "px");
     })
@@ -210,7 +233,7 @@ function createHistogram(container, airbnbData, selectedNeighborhood, onBarClick
       const cat = categories[i];
       const bounds = { min: d.x0, max: isFinite(d.x1) ? d.x1 : Infinity };
 
-      if (onBarClick) onBarClick(cat, bounds);
+      if (onBarClick) onBarClick(cat, bounds, event.ctrlKey); 
     });
 }
 

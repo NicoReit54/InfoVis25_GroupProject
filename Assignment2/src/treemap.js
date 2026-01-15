@@ -4,9 +4,6 @@ const treemapColor = d3.scaleOrdinal([
     "#AAAA44", "#DDDD77", "#774411", "#AA7744", "#771122", "#AA4455", "#DD7788"
 ]);
 
-
-
-
 function buildHierarchyTree(data, level1, level2, level3) {
     const group = d3.rollup(
         data,
@@ -29,14 +26,14 @@ function buildHierarchyTree(data, level1, level2, level3) {
     .sum(([key, value]) => value.count)
     .sort((a, b) => d3.descending(a.value, b.value));
 }
+
 function createTreemap(container, airbnbData, level1, level2, level3, onCellClick, selectedFeature) {
-    const width = 400;
-    const height = 300;
+    const width = 800;
+    const height = 400;
     const lineHeight = 15;
 
     const textPaddingX = 5;
-    const approxCharWidth = 6; // px per character at 9px font
-
+    const approxCharWidth = 6;  // px per character at 9px font
 
     // helper function for map selection issue where the text might overflow the tiles
     function isNodeSelected(d) {
@@ -52,6 +49,7 @@ function createTreemap(container, airbnbData, level1, level2, level3, onCellClic
             l3 === selectedFeature.l3
         );
     }
+    
     let svg = d3.select(container).select("svg");
 
     if (svg.empty()) {
@@ -60,19 +58,19 @@ function createTreemap(container, airbnbData, level1, level2, level3, onCellClic
             .attr("viewBox", [0, 0, width, height])
             .attr("width", "100%")
             .attr("height", "100%")
+            .attr("preserveAspectRatio", "xMidYMid meet")
             .attr("font-family", "sans-serif")
             .attr("font-size", "9px");
     }
 
     if (!airbnbData || airbnbData.length === 0) {
-        d3.select(container)
-            .append("svg")
-            .attr("viewBox", [0, 0, width, height])
-            .append("text")
+        svg.selectAll("*").remove();
+        svg.append("text")
             .attr("x", width / 2)
             .attr("y", height / 2)
             .attr("text-anchor", "middle")
             .attr("fill", "#999")
+            .attr("font-size", "14px") 
             .text("No Data");
         return;
     }
@@ -92,20 +90,14 @@ function createTreemap(container, airbnbData, level1, level2, level3, onCellClic
         .duration(500)
         .ease(d3.easeSin);
 
-    // ============================
-    // DATA JOIN (KEYED)
-    // ============================
     const nodeKey = d =>
-    `${d.parent?.parent?.data?.[0]}-${d.parent?.data?.[0]}-${d.data[0]}`;
+        `${d.parent?.parent?.data?.[0]}-${d.parent?.data?.[0]}-${d.data[0]}`;
 
     const nodes = svg.selectAll("g.node")
         .data(root.leaves(), d =>
             `${d.parent?.parent?.data?.[0]}-${d.parent?.data?.[0]}-${d.data[0]}`
         );
 
-    // ============================
-    // ENTER
-    // ============================
     const nodesEnter = nodes.enter()
         .append("g")
         .attr("class", "node")
@@ -124,14 +116,8 @@ function createTreemap(container, airbnbData, level1, level2, level3, onCellClic
         .attr("width", 0)
         .attr("height", 0);
 
-    // ============================
-    // MERGE
-    // ============================
     const nodesMerged = nodesEnter.merge(nodes);
 
-    // ============================
-    // UPDATE + TRANSITIONS
-    // ============================
     nodesMerged.transition(t)
         .attr("transform", d => `translate(${d.x0},${d.y0})`);
 
@@ -140,17 +126,13 @@ function createTreemap(container, airbnbData, level1, level2, level3, onCellClic
         .attr("height", d => Math.max(0, d.y1 - d.y0))
         .attr("fill", d => treemapColor(d.parent.parent.data[0]))
         .attr("fill-opacity", d => isNodeSelected(d) ? 1 : 0.5)
-        .attr("stroke", d => isNodeSelected(d) ? "#b1b1b1" : "none")
-
+        .attr("stroke", d => isNodeSelected(d) ? "#000" : "none")
         .attr("stroke-width", 2);
 
     nodesMerged.select("clipPath").select("rect").transition(t)
         .attr("width", d => Math.max(0, d.x1 - d.x0))
         .attr("height", d => Math.max(0, d.y1 - d.y0));
 
-    // ============================
-    // TEXT (REBUILD WITH FADE)
-    // ============================
     nodesMerged.select("text").remove();
 
     const text = nodesMerged.append("text")
@@ -195,13 +177,8 @@ function createTreemap(container, airbnbData, level1, level2, level3, onCellClic
             .text(l => l.text);
     });
 
-
-
     text.transition(t).style("opacity", 1);
 
-    // ============================
-    // INTERACTIONS (UNCHANGED)
-    // ============================
     nodesMerged
         .on("mouseover", function (event, d) {
             const l1 = d.parent?.parent?.data?.[0] || "";
@@ -213,7 +190,8 @@ function createTreemap(container, airbnbData, level1, level2, level3, onCellClic
                 .html(`<strong>${l1} > ${l2} > ${l3}</strong><br>
                        Count: ${stats.count}<br>
                        Avg Price: $${stats.avg_price?.toFixed(0) || 0}<br>
-                       Avg Rating: ${stats.avg_rating?.toFixed(2) || 0}`)
+                       Avg Rating: ${stats.avg_rating?.toFixed(2) || 0}<br>
+                       <em>${event.ctrlKey ? 'Ctrl+' : ''}Click to ${isNodeSelected(d) ? 'deselect' : 'select'}</em>`)
                 .style("left", (event.pageX + 10) + "px")
                 .style("top", (event.pageY - 10) + "px");
         })
@@ -225,12 +203,9 @@ function createTreemap(container, airbnbData, level1, level2, level3, onCellClic
                 l2: d.parent?.data?.[0],
                 l3: d.data[0],
                 level1, level2, level3
-            });
+            }, event.ctrlKey);
         });
 
-    // ============================
-    // EXIT
-    // ============================
     nodes.exit()
         .transition(t)
         .style("opacity", 0)

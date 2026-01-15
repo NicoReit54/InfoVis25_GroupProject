@@ -1,6 +1,6 @@
 import { districtMap, districtColors } from './map.js';
 
-function createScatter(container, airbnbData, crimeData, onPointClick) {
+function createScatter(container, airbnbData, crimeData, selectedNeighborhoods, onPointClick) {
     const margin = { top: 20, right: 20, bottom: 50, left: 60 };
     const width = 400 - margin.left - margin.right;
     const height = 300 - margin.top - margin.bottom;
@@ -79,9 +79,11 @@ function createScatter(container, airbnbData, crimeData, onPointClick) {
         .attr("class", "scatter-point")
         .attr("cx", d => x(d.crimeCount))
         .attr("cy", d => y(d.listingCount))
-        .attr("r", 3)
+        .attr("r", d => selectedNeighborhoods.has(d.neighborhood) ? 5 : 3) 
         .attr("fill", d => districtColors[d.district] || "#666")
-        .attr("opacity", 0.7)
+        .attr("opacity", d => selectedNeighborhoods.has(d.neighborhood) ? 1 : 0.7) 
+        .attr("stroke", d => selectedNeighborhoods.has(d.neighborhood) ? "#000" : "none") 
+        .attr("stroke-width", 2)
         .attr("cursor", "pointer")
         .on("mouseover", function(event, d) {
             d3.select(this).attr("r", 5).attr("opacity", 1);
@@ -90,16 +92,18 @@ function createScatter(container, airbnbData, crimeData, onPointClick) {
                        District: ${d.district}<br>
                        Listings: ${d.listingCount}<br>
                        Crimes: ${d.crimeCount}<br>
-                       Avg Price: $${d.avgPrice.toFixed(0)}`)
+                       Avg Price: $${d.avgPrice.toFixed(0)}<br>
+                       <em>${event.ctrlKey ? 'Ctrl+' : ''}Click to ${selectedNeighborhoods.has(d.neighborhood) ? 'deselect' : 'select'}</em>`)
                 .style("left", (event.pageX + 10) + "px")
                 .style("top", (event.pageY - 10) + "px");
         })
-        .on("mouseout", function() {
-            d3.select(this).attr("r", 3).attr("opacity", 0.7);
+        .on("mouseout", function(event, d) {
+            const isSelected = selectedNeighborhoods.has(d.neighborhood);
+            d3.select(this).attr("r", isSelected ? 5 : 3).attr("opacity", isSelected ? 1 : 0.7);
             tooltip.style("opacity", 0);
         })
         .on("click", function(event, d) {
-            if (onPointClick) onPointClick(d.neighborhood);
+            if (onPointClick) onPointClick(d.neighborhood, event.ctrlKey); 
         });
 }
 

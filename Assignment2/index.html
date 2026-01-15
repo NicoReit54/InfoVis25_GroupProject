@@ -35,9 +35,16 @@
 
     <section class="panel" id="panel-map">
       <h2>Location Map</h2>
-      <p class="panel-hint">Scroll to zoom, drag to select. Toggle layers below:</p>
-      <div id="crimeTypeFilters" class="crime-filters"></div>
-      <div id="map"></div>
+      <p class="panel-hint">Scroll to zoom, drag to select</p>
+      
+      <div class="panel-content-wrapper">
+        <div class="plot-area">
+          <div id="map"></div>
+        </div>
+        <div class="filter-sidebar">
+          <div id="crimeTypeFilters" class="crime-filters"></div>
+        </div>
+      </div>
     </section>
 
     <section class="panel" id="panel-scatter">
@@ -56,30 +63,41 @@
       <h2>Airbnb Feature Breakdown</h2>
       <p class="panel-hint">Click cell to filter histogram</p>
 
-      <div class="controls">
-        <label>Level 1</label>
-        <select id="level1">
-          <option value="rating_bucket">Rating Bucket</option>
-          <option value="room_type">Room Type</option>
-          <option value="property_type">Property Type</option>
-        </select>
+      <div class="panel-content-wrapper">
+        <div class="plot-area">
+          <div id="treemap"></div>
+        </div>
+        <div class="filter-sidebar">
+          <div class="controls">
+            <div class="control-row">
+              <label>Level 1</label>
+              <select id="level1">
+                <option value="rating_bucket">Rating Bucket</option>
+                <option value="room_type">Room Type</option>
+                <option value="property_type">Property Type</option>
+              </select>
+            </div>
 
-        <label>Level 2</label>
-        <select id="level2">
-          <option value="room_type">Room Type</option>
-          <option value="property_type">Property Type</option>
-          <option value="rating_bucket">Rating Bucket</option>
-        </select>
+            <div class="control-row">
+              <label>Level 2</label>
+              <select id="level2">
+                <option value="room_type">Room Type</option>
+                <option value="property_type">Property Type</option>
+                <option value="rating_bucket">Rating Bucket</option>
+              </select>
+            </div>
 
-        <label>Level 3</label>
-        <select id="level3">
-          <option value="property_type">Property Type</option>
-          <option value="room_type">Room Type</option>
-          <option value="rating_bucket">Rating Bucket</option>
-        </select>
+            <div class="control-row">
+              <label>Level 3</label>
+              <select id="level3">
+                <option value="property_type">Property Type</option>
+                <option value="room_type">Room Type</option>
+                <option value="rating_bucket">Rating Bucket</option>
+              </select>
+            </div>
+          </div>
+        </div>
       </div>
-
-      <div id="treemap"></div>
     </section>
 
     <section class="panel" id="panel-crimeBar">
