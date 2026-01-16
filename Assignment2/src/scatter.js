@@ -49,15 +49,31 @@ function createScatter(container, airbnbData, crimeData, selectedNeighborhoods, 
     const y = d3.scaleLinear().domain([0, yMax]).range([height, 0]).nice();
 
     const allPrices = aggregatedData.map(d => d.avgPrice).sort((a, b) => a - b);
-    const priceExtent = [allPrices[0], allPrices[allPrices.length - 1]];
-    
+    let minPrice = allPrices[0];
+    let maxPrice = allPrices[allPrices.length - 1];
+
+    // damits nicht eins zu eins ist
+    if (minPrice === maxPrice) {
+        minPrice = minPrice - 10;
+        maxPrice = maxPrice + 10;
+    }
+
     const percentile95 = d3.quantile(allPrices, 0.95);
-    const priceMaxRaw = Math.min(400, percentile95 || 400);
-    const priceMax = Math.floor(priceMaxRaw / 50) * 50;
+    let priceMax = percentile95 || maxPrice;
+
+    // Clamp to reasonable range
+    priceMax = Math.min(priceMax, 400);
+    priceMax = Math.max(priceMax, minPrice + 20); // ensure separation
+
+    // Round to nearest 50
+    priceMax = Math.ceil(priceMax / 50) * 50;
+
+    const priceExtent = [minPrice, priceMax];
+
     
     const colorScale = d3.scaleLinear()
         .domain([priceExtent[0], (priceExtent[0] + priceMax) / 2, priceMax])
-        .range(["#4ECDC4", "#A57FC8", "#E91E8C"])
+        .range(["#4ECDC4", "#ffffff", "#E91E8C"])
         .interpolate(d3.interpolateRgb)
         .clamp(true);
 
