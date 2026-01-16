@@ -1,7 +1,7 @@
 import { districtMap, districtColors } from './map.js';
 
 function createScatter(container, airbnbData, crimeData, selectedNeighborhoods, onPointClick) {
-    const margin = { top: 20, right: 20, bottom: 50, left: 60 };
+    const margin = { top: 20, right: 80, bottom: 50, left: 60 };
     const width = 400 - margin.left - margin.right;
     const height = 300 - margin.top - margin.bottom;
 
@@ -71,6 +71,39 @@ function createScatter(container, airbnbData, crimeData, selectedNeighborhoods, 
         .attr("text-anchor", "middle")
         .attr("font-size", "11px")
         .text("Listing Count");
+
+    const districtsInData = Array.from(new Set(aggregatedData.map(d => d.district)))
+        .sort((a, b) => a.localeCompare(b));
+
+    const legend = svg.append("g")
+        .attr("class", "legend")
+        .attr("transform", `translate(${width + 10}, 0)`); 
+
+    legend.append("text")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("font-size", "11px")
+        .attr("font-weight", 600)
+        .text("District");
+
+    const legendItem = legend.selectAll("g.legend-item")
+        .data(districtsInData)
+        .enter()
+        .append("g")
+        .attr("class", "legend-item")
+        .attr("transform", (d, i) => `translate(0, ${12 + i * 14})`);
+
+    legendItem.append("circle")
+        .attr("cx", 6)
+        .attr("cy", 0)
+        .attr("r", 4)
+        .attr("fill", d => districtColors[d] || "#666");
+
+    legendItem.append("text")
+        .attr("x", 14)
+        .attr("y", 3)
+        .attr("font-size", "10px")
+        .text(d => d);
 
     svg.selectAll(".scatter-point")
         .data(aggregatedData)
