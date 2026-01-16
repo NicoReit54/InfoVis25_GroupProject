@@ -460,6 +460,15 @@ function setupEventListeners() {
         
         renderAll();
     });
+
+    // Event-Listener für Treemap-Hierarchie-Dropdowns
+    ["level1", "level2", "level3"].forEach(id => {
+        document.getElementById(id).addEventListener("change", e => {
+            state.local.treemap[id] = e.target.value;
+            state.local.crossFilter.treemapFeature = null;
+            renderAll();
+        });
+    });
 }
 
 function assignNeighborhoodToCrime(crimeData, geoData) {
