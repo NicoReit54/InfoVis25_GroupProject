@@ -252,7 +252,12 @@ function resetCrossFilters() {
 }
 
 function renderAll() {
-    const filteredAirbnb = applyFilters(globalData);
+    let filteredAirbnb = applyFilters(globalData);
+
+    // Apply treemap + histogram cross-filters globally 
+    filteredAirbnb = applyHistogramFilter(filteredAirbnb); 
+    filteredAirbnb = applyTreemapFilter(filteredAirbnb);
+    
     const filteredCrimes = applyFiltersToCrimes(globalData.crimeRaw);
     console.log("Gewählte Nachbarschaften:", state.global.selectedNeighborhoods);
     console.log("Gefundene Airbnbs:", filteredAirbnb.length);
