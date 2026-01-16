@@ -64,7 +64,7 @@ function createTreemap(container, airbnbData, level1, level2, level3, onCellClic
     }
 
     // Clear all previous content first
-    svg.selectAll("*").remove();
+    //svg.selectAll("*").remove();
 
     if (!airbnbData || airbnbData.length === 0) {
         svg.append("text")
