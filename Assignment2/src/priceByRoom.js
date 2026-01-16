@@ -105,6 +105,21 @@ function createPriceByRoom(container, airbnbData, selectedNeighborhood, onBoxCli
     svg.append("g")
         .call(d3.axisLeft(y).ticks(5).tickFormat(d => `$${d}`));
 
+    const xTitle = selectedNeighborhood && selectedNeighborhood !== "All" && selectedNeighborhood !== "Multiple"
+        ? `Room Type - ${selectedNeighborhood}`
+        : selectedNeighborhood === "Multiple"
+            ? "Room Type - Multiple Neighborhoods"
+            : "Room Type - All";
+
+    svg.append("text")
+        .attr("class", "x-title")
+        .attr("x", width / 2)
+        .attr("y", height + 60)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "11px")
+        .text(xTitle);
+
+
     svg.append("text")
         .attr("class", "axis-label")
         .attr("transform", "rotate(-90)")
