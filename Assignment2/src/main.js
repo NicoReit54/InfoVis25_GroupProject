@@ -415,24 +415,50 @@ function setupEventListeners() {
     });
 
     document.getElementById("clearFilters").addEventListener("click", () => {
+        // Reset Global filters
         state.global.selectedNeighborhoods.clear();
         state.global.selectedRoomTypes.clear();
         state.global.brushBounds = null;
+        
+        // Reset Cross filters 
         state.local.crossFilter.priceBucket = null;
         state.local.crossFilter.priceBounds = null;
         state.local.crossFilter.treemapFeature = null;
+        
+        // reset Crime Types
+        state.global.selectedCrimeTypes.clear();
+        const crimeTypeContainer = document.getElementById("crimeTypeFilters");
+        if (crimeTypeContainer) {
+            const crimeCheckboxes = crimeTypeContainer.querySelectorAll(".crime-type-toggle input");
+            crimeCheckboxes.forEach(cb => {
+                cb.checked = true;
+                const type = cb.dataset.crimeType;
+                state.global.selectedCrimeTypes.add(type);
+            });
+            
+            const allCrimesCheckbox = crimeTypeContainer.querySelector(".all-crimes-toggle input");
+            if (allCrimesCheckbox) {
+                allCrimesCheckbox.checked = true;
+            }
+        }
+        
+        state.global.showAirbnb = true;
+        const airbnbCheckbox = crimeTypeContainer?.querySelector(".airbnb-toggle input");
+        if (airbnbCheckbox) {
+            airbnbCheckbox.checked = true;
+        }
+        
         syncDropdowns();
         mapInstance?.clearBrush();
-        mapInstance?.resetZoom();  // Zoom zurücksetzen
+        mapInstance?.resetZoom();
+        
+        if (mapInstance) {
+            const filteredAirbnb = applyFilters(globalData);
+            mapInstance.setAirbnbVisibility(state.global.showAirbnb, filteredAirbnb);
+            mapInstance.updateCrimePoints(globalData.crimeRaw, state.global.selectedCrimeTypes);
+        }
+        
         renderAll();
-    });
-
-    ["level1", "level2", "level3"].forEach(id => {
-        document.getElementById(id).addEventListener("change", e => {
-            state.local.treemap[id] = e.target.value;
-            state.local.crossFilter.treemapFeature = null;
-            renderAll();
-        });
     });
 }
 
