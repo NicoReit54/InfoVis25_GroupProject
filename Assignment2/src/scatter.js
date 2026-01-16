@@ -1,7 +1,7 @@
-import { districtMap, districtColors } from './map.js';
+import { districtMap } from './map.js';
 
 function createScatter(container, airbnbData, crimeData, selectedNeighborhoods, onPointClick) {
-    const margin = { top: 20, right: 80, bottom: 50, left: 60 };
+    const margin = { top: 20, right: 100, bottom: 50, left: 60 };
     const width = 400 - margin.left - margin.right;
     const height = 300 - margin.top - margin.bottom;
 
@@ -30,7 +30,7 @@ function createScatter(container, airbnbData, crimeData, selectedNeighborhoods, 
             avgPrice: d3.mean(listings, d => d.price),
             avgRating: d3.mean(listings, d => d.review_scores_rating)
         };
-    }).filter(d => d.listingCount > 0);
+    }).filter(d => d.listingCount > 0 && d.district !== 'Unknown');
 
     if (aggregatedData.length === 0) {
         svg.append("text")
@@ -47,6 +47,19 @@ function createScatter(container, airbnbData, crimeData, selectedNeighborhoods, 
 
     const x = d3.scaleLinear().domain([0, xMax]).range([0, width]).nice();
     const y = d3.scaleLinear().domain([0, yMax]).range([height, 0]).nice();
+
+    const allPrices = aggregatedData.map(d => d.avgPrice).sort((a, b) => a - b);
+    const priceExtent = [allPrices[0], allPrices[allPrices.length - 1]];
+    
+    const percentile95 = d3.quantile(allPrices, 0.95);
+    const priceMaxRaw = Math.min(400, percentile95 || 400);
+    const priceMax = Math.floor(priceMaxRaw / 50) * 50;
+    
+    const colorScale = d3.scaleLinear()
+        .domain([priceExtent[0], (priceExtent[0] + priceMax) / 2, priceMax])
+        .range(["#4ECDC4", "#A57FC8", "#E91E8C"])
+        .interpolate(d3.interpolateRgb)
+        .clamp(true);
 
     svg.append("g")
         .attr("transform", `translate(0,${height})`)
@@ -72,38 +85,58 @@ function createScatter(container, airbnbData, crimeData, selectedNeighborhoods, 
         .attr("font-size", "11px")
         .text("Listing Count");
 
-    const districtsInData = Array.from(new Set(aggregatedData.map(d => d.district)))
-        .sort((a, b) => a.localeCompare(b));
-
+    const legendWidth = 20;
+    const legendHeight = 150;
     const legend = svg.append("g")
         .attr("class", "legend")
-        .attr("transform", `translate(${width + 10}, 0)`); 
+        .attr("transform", `translate(${width + 10}, ${height / 2 - legendHeight / 2})`);
+
+    const defs = svg.append("defs");
+    const linearGradient = defs.append("linearGradient")
+        .attr("id", "price-gradient")
+        .attr("x1", "0%")
+        .attr("y1", "100%")
+        .attr("x2", "0%")
+        .attr("y2", "0%");
+
+    const gradientStops = 10;
+    for (let i = 0; i <= gradientStops; i++) {
+        const offset = (i / gradientStops) * 100;
+        const value = priceExtent[0] + (priceMax - priceExtent[0]) * (i / gradientStops);
+        linearGradient.append("stop")
+            .attr("offset", `${offset}%`)
+            .attr("stop-color", colorScale(value));
+    }
+
+    legend.append("rect")
+        .attr("x", 0)
+        .attr("y", 0)
+        .attr("width", legendWidth)
+        .attr("height", legendHeight)
+        .style("fill", "url(#price-gradient)")
+        .style("stroke", "#ccc")
+        .style("stroke-width", 1);
 
     legend.append("text")
         .attr("x", 0)
-        .attr("y", 0)
+        .attr("y", -10)
         .attr("font-size", "11px")
         .attr("font-weight", 600)
-        .text("District");
+        .text("Avg Price ($)");
 
-    const legendItem = legend.selectAll("g.legend-item")
-        .data(districtsInData)
-        .enter()
-        .append("g")
-        .attr("class", "legend-item")
-        .attr("transform", (d, i) => `translate(0, ${12 + i * 14})`);
+    const priceLabels = [
+        { value: priceMax, y: 0, label: `${priceMax}+` },
+        { value: (priceExtent[0] + priceMax) / 2, y: legendHeight / 2, label: `${Math.round((priceExtent[0] + priceMax) / 2)}` },
+        { value: priceExtent[0], y: legendHeight, label: `${Math.round(priceExtent[0])}` }
+    ];
 
-    legendItem.append("circle")
-        .attr("cx", 6)
-        .attr("cy", 0)
-        .attr("r", 4)
-        .attr("fill", d => districtColors[d] || "#666");
-
-    legendItem.append("text")
-        .attr("x", 14)
-        .attr("y", 3)
-        .attr("font-size", "10px")
-        .text(d => d);
+    priceLabels.forEach(d => {
+        legend.append("text")
+            .attr("x", legendWidth + 5)
+            .attr("y", d.y + 4)
+            .attr("font-size", "10px")
+            .text(d.label);
+    });
 
     svg.selectAll(".scatter-point")
         .data(aggregatedData)
@@ -113,7 +146,7 @@ function createScatter(container, airbnbData, crimeData, selectedNeighborhoods, 
         .attr("cx", d => x(d.crimeCount))
         .attr("cy", d => y(d.listingCount))
         .attr("r", d => selectedNeighborhoods.has(d.neighborhood) ? 5 : 3) 
-        .attr("fill", d => districtColors[d.district] || "#666")
+        .attr("fill", d => colorScale(d.avgPrice))
         .attr("opacity", d => selectedNeighborhoods.has(d.neighborhood) ? 1 : 0.7) 
         .attr("stroke", d => selectedNeighborhoods.has(d.neighborhood) ? "#000" : "none") 
         .attr("stroke-width", 2)
