@@ -70,6 +70,14 @@ function createCrimeBar(container, crimeData, airbnbData, selectedNeighborhoods,
         .attr("dx", "-0.5em")
         .attr("dy", "0.5em");
 
+    svg.append("text")
+        .attr("class", "x-title")
+        .attr("x", width / 2)
+        .attr("y", height + 60)   // <- weiter unten, damit es nicht mit ticks kollidiert
+        .attr("text-anchor", "middle")
+        .attr("font-size", "11px")
+        .text("Neighborhoods");
+
     svg.append("g")
         .call(d3.axisLeft(y).ticks(5));
 

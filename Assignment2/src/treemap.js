@@ -63,8 +63,10 @@ function createTreemap(container, airbnbData, level1, level2, level3, onCellClic
             .attr("font-size", "9px");
     }
 
+    // Clear all previous content first
+    //svg.selectAll("*").remove();
+
     if (!airbnbData || airbnbData.length === 0) {
-        svg.selectAll("*").remove();
         svg.append("text")
             .attr("x", width / 2)
             .attr("y", height / 2)

@@ -32,7 +32,7 @@ const districtMap = {
     'Portage Park': 'Northwest', 'Edison Park': 'Northwest', 'Galewood': 'Northwest', 'North Center': 'North Side', 'Lake View': 'North Side', 'Lincoln Park': 'North Side',
     'Avondale': 'North Side', 'Logan Square': 'North Side', 'Bucktown': 'North Side', 'Boystown': 'North Side', 'Wrigleyville': 'North Side', 'Sheffield & DePaul': 'North Side',
     'Humboldt Park': 'West Side', 'West Town': 'West Side', 'Austin': 'West Side', 'Garfield Park': 'West Side', 'North Lawndale': 'West Side', 'Little Village': 'West Side',
-    'Lower West Side': 'West Side', 'Near West Side': 'West Side', 'West Loop': 'West Side', 'Greektown': 'West Side', 'United Center': 'West Side', 'Little Italy,UIC': 'West Side',
+    'Lower West Side': 'West Side', 'Near West Side': 'West Side', 'West Loop': 'West Side', 'Greektown': 'West Side', 'United Center': 'West Side', 'Little Italy, UIC': 'West Side',
     'Ukrainian Village': 'West Side', 'East Village': 'West Side', 'Wicker Park': 'West Side', 'Near North Side': 'Central', 'Loop': 'Central', 'Near South Side': 'Central',
     'Armour Square': 'Central', 'Chinatown': 'Central', 'Douglas': 'Central', 'Oakland': 'Central', 'Fuller Park': 'Central', 'Grand Boulevard': 'Central', 'Kenwood': 'Central',
     'Washington Park': 'Central', 'Hyde Park': 'Central', 'Woodlawn': 'Central', 'Gold Coast': 'Central', 'River North': 'Central', 'Streeterville': 'Central',
