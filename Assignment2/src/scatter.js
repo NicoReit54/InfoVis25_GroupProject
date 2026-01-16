@@ -73,7 +73,7 @@ function createScatter(container, airbnbData, crimeData, selectedNeighborhoods, 
     
     const colorScale = d3.scaleLinear()
         .domain([priceExtent[0], (priceExtent[0] + priceMax) / 2, priceMax])
-        .range(["#4ECDC4", "#ffffff", "#E91E8C"])
+        .range(["#2AB8A6", "#8A6FD1", "#D81B60"])
         .interpolate(d3.interpolateRgb)
         .clamp(true);
 
